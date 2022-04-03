@@ -1,13 +1,9 @@
 import { Glyph } from '@/glyph'
 
 export class Tile {
-  private _glyph: Glyph | null = null
+  constructor(private _glyph: Glyph) {}
 
-  constructor(protected glyph: Glyph) {
-    this._glyph = glyph
-  }
-
-  public get Glyph(): Glyph | null {
+  public get glyph(): Glyph {
     return this._glyph
   }
 }

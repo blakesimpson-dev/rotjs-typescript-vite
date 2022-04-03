@@ -1,27 +1,21 @@
 import { Display, KEYS, Map as RotMap } from 'rot-js'
+import { Game } from '@/game'
 import { Scene } from '@/scene'
 import { Map } from '@/map'
 import { Tile } from '@/tile'
-import { game, displayOptions, scenes, tiles } from '@/main'
 
 export class PlayScene extends Scene {
-  private _map: Map | null = null
-
-  constructor() {
-    super('Play')
-  }
+  private _map: Map = new Map([])
 
   public enter(): void {
-    super.enter()
-
     const mapTiles: Tile[][] = []
-    const width = displayOptions.width ?? Number.NaN
-    const height = displayOptions.height ?? Number.NaN
+    const width = Game.instance.displayOptions.width ?? 0
+    const height = Game.instance.displayOptions.height ?? 0
 
     for (let x = 0; x < width; x++) {
       mapTiles.push([])
       for (let y = 0; y < height; y++) {
-        mapTiles[x].push(tiles.emptyTile)
+        mapTiles[x].push(Game.instance.tiles.empty)
       }
     }
 
@@ -35,32 +29,24 @@ export class PlayScene extends Scene {
 
     generator.create((x, y, v) => {
       if (v === 1) {
-        mapTiles[x][y] = tiles.floorTile
+        mapTiles[x][y] = Game.instance.tiles.floor
       } else {
-        mapTiles[x][y] = tiles.wallTile
+        mapTiles[x][y] = Game.instance.tiles.wall
       }
     })
-
-    console.log(mapTiles.length)
-    console.log(mapTiles[0].length)
 
     this._map = new Map(mapTiles)
   }
 
-  public render(display: Display | null): void {
-    const width = this._map?.Width ?? Number.NaN
-    const height = this._map?.Height ?? Number.NaN
+  public exit(): void {
+    console.log('exit WinScene')
+  }
 
-    for (let x = 0; x < width; x++) {
-      for (let y = 0; y < height; y++) {
-        const glyph = this._map?.getTile(x, y).Glyph
-        display?.draw(
-          x,
-          y,
-          glyph?.Symbol ?? ' ',
-          glyph?.ForegroundColor ?? 'white',
-          glyph?.BackgroundColor ?? 'black'
-        )
+  public render(display: Display): void {
+    for (let x = 0; x < this._map.width; x++) {
+      for (let y = 0; y < this._map.height; y++) {
+        const glyph = this._map.getTile(x, y).glyph
+        display.draw(x, y, glyph.symbol, glyph.fgColor, glyph.bgColor)
       }
     }
   }
@@ -69,11 +55,11 @@ export class PlayScene extends Scene {
     if (eventType === 'keydown') {
       switch (event.keyCode) {
         case KEYS.VK_RETURN:
-          game.Scene = scenes.winScene
+          Game.instance.currentScene = Game.instance.scenes.win
           break
 
         case KEYS.VK_ESCAPE:
-          game.Scene = scenes.loseScene
+          Game.instance.currentScene = Game.instance.scenes.lose
           break
 
         default:
