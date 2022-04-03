@@ -1,27 +1,25 @@
-export class Glyph {
-  private _symbol = ' '
-  private _fgColor = 'white'
-  private _bgColor = 'black'
+import { GlyphOptions } from './'
 
-  constructor(
-    protected symbol?: string,
-    protected fgColor?: string,
-    protected bgColor?: string
-  ) {
-    this._symbol = symbol ?? this._symbol
-    this._fgColor = fgColor ?? this._fgColor
-    this._bgColor = bgColor ?? this._bgColor
+export class Glyph {
+  private _symbol: string
+  private _fgColor: string
+  private _bgColor: string
+
+  constructor(protected options: GlyphOptions) {
+    this._symbol = options.symbol ?? ' '
+    this._fgColor = options.fgColor ?? 'white'
+    this._bgColor = options.bgColor ?? 'black'
   }
 
-  public get Symbol(): string {
+  public get symbol(): string {
     return this._symbol
   }
 
-  public get ForegroundColor(): string {
+  public get fgColor(): string {
     return this._fgColor
   }
 
-  public get BackgroundColor(): string {
+  public get bgColor(): string {
     return this._bgColor
   }
 }

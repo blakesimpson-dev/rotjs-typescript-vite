@@ -1,17 +1,31 @@
 import { DisplayOptions } from 'rot-js/lib/display/types'
 import { Display } from 'rot-js'
-import { Scene } from '@/scene'
+import { SceneCollection, SceneFactory, Scene } from '@/scene'
+import { TileCollection, TileFactory } from '@/tile'
 
 export class Game {
-  private _display: Display | null = null
-  private _scene: Scene | null = null
+  private static _instance: Game
 
-  public init(displayConfig: Partial<DisplayOptions>): void {
-    this._display = new Display(displayConfig)
+  private _displayOptions: Partial<DisplayOptions>
+  private _display: Display
+  private _scenes: SceneCollection
+  private _tiles: TileCollection
+  private _currentScene: Scene
+
+  constructor() {
+    this._displayOptions = { width: 128, height: 64 }
+    this._display = new Display(this._displayOptions)
+    this._scenes = SceneFactory.instance.scenes
+    this._tiles = TileFactory.instance.tiles
+
+    this._currentScene = this._scenes.start
+    this._display.clear()
+    this._currentScene.enter()
+    this._currentScene.render(this._display)
 
     const bindEventToScene = (eventType: string): void => {
       window.addEventListener(eventType, (event: Event) => {
-        this._scene?.processInputEvent(eventType, event)
+        this._currentScene.processInputEvent(eventType, event)
       })
     }
 
@@ -20,21 +34,39 @@ export class Game {
     bindEventToScene('keypress')
   }
 
-  public get Display(): Display | null {
+  public static get instance(): Game {
+    if (!Game._instance) {
+      Game._instance = new Game()
+    }
+
+    return Game._instance
+  }
+
+  public get displayOptions(): Partial<DisplayOptions> {
+    return this._displayOptions
+  }
+
+  public get display(): Display {
     return this._display
   }
 
-  public get Scene(): Scene | null {
-    return this._scene
+  public get scenes(): SceneCollection {
+    return this._scenes
   }
 
-  public set Scene(scene: Scene | null) {
-    this._scene?.exit()
-    this._display?.clear()
-    this._scene = scene
-    this._scene?.enter()
-    if (this._display) {
-      this._scene?.render(this._display)
-    }
+  public get tiles(): TileCollection {
+    return this._tiles
+  }
+
+  public get currentScene(): Scene {
+    return this._currentScene
+  }
+
+  public set currentScene(scene: Scene) {
+    this._currentScene.exit()
+    this._display.clear()
+    this._currentScene = scene
+    this._currentScene.enter()
+    this._currentScene.render(this._display)
   }
 }
