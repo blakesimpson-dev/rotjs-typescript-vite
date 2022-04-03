@@ -6,7 +6,7 @@ export class LoseScene extends Scene {
     super('Lose')
   }
 
-  public render = (display: Display | null): void => {
+  public render(display: Display | null): void {
     for (let i = 0; i < 22; i++) {
       display?.drawText(2, i + 1, '%b{red}You lose! :(')
     }

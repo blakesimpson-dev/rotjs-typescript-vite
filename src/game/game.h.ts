@@ -1,3 +1,4 @@
+import { DisplayOptions } from 'rot-js/lib/display/types'
 import { Display } from 'rot-js'
 import { Scene } from '@/scene'
 
@@ -5,8 +6,8 @@ export class Game {
   private _display: Display | null = null
   private _scene: Scene | null = null
 
-  public init = (): void => {
-    this._display = new Display({ width: 80, height: 20 })
+  public init(displayConfig: Partial<DisplayOptions>): void {
+    this._display = new Display(displayConfig)
 
     const bindEventToScene = (eventType: string): void => {
       window.addEventListener(eventType, (event: Event) => {
@@ -19,15 +20,15 @@ export class Game {
     bindEventToScene('keypress')
   }
 
-  public get display(): Display | null {
+  public get Display(): Display | null {
     return this._display
   }
 
-  public get scene(): Scene | null {
+  public get Scene(): Scene | null {
     return this._scene
   }
 
-  public set scene(scene: Scene | null) {
+  public set Scene(scene: Scene | null) {
     this._scene?.exit()
     this._display?.clear()
     this._scene = scene
