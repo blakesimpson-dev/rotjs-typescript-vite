@@ -3,11 +3,11 @@ import { Display } from 'rot-js'
 export abstract class Scene {
   constructor(public name: string) {}
 
-  public enter = (): void => {
+  public enter(): void {
     console.log(`Entered Scene: ${this.name}`)
   }
 
-  public exit = (): void => {
+  public exit(): void {
     console.log(`Exited Scene: ${this.name}`)
   }
 

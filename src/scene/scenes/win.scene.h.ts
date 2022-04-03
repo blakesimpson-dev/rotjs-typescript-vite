@@ -6,7 +6,7 @@ export class WinScene extends Scene {
     super('Win')
   }
 
-  public render = (display: Display | null): void => {
+  public render(display: Display | null): void {
     for (let i = 0; i < 22; i++) {
       const r = Math.round(Math.random() * 255)
       const g = Math.round(Math.random() * 255)

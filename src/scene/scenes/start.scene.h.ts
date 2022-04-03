@@ -1,13 +1,13 @@
 import { Display, KEYS } from 'rot-js'
 import { Scene } from '@/scene'
-import { game, playScene } from '@/main'
+import { game, scenes } from '@/main'
 
 export class StartScene extends Scene {
   constructor() {
     super('Start')
   }
 
-  public render = (display: Display | null): void => {
+  public render(display: Display | null): void {
     display?.drawText(
       1,
       1,
@@ -20,7 +20,7 @@ export class StartScene extends Scene {
     if (eventType === 'keydown') {
       switch (event.keyCode) {
         case KEYS.VK_RETURN:
-          game.scene = playScene
+          game.Scene = scenes.playScene
           break
 
         default:
