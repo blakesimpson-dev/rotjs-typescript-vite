@@ -1,25 +1,31 @@
-import { TileCollection } from './'
-import { Tile } from '@/tile'
 import { Glyph } from '@/glyph'
+import { Tile, TileCollection } from '@/tile'
 
 export class TileFactory {
   private static _instance: TileFactory
-
-  private _tiles: TileCollection
+  readonly tiles: TileCollection
 
   constructor() {
-    this._tiles = {
-      empty: new Tile(new Glyph({})),
-      floor: new Tile(new Glyph({ symbol: '.' })),
-      wall: new Tile(new Glyph({ symbol: '#' })),
+    this.tiles = {
+      empty: new Tile({
+        glyph: new Glyph({}),
+        isCollider: false,
+        isDestructable: false,
+      }),
+      floor: new Tile({
+        glyph: new Glyph({ symbol: '.' }),
+        isCollider: false,
+        isDestructable: false,
+      }),
+      wall: new Tile({
+        glyph: new Glyph({ symbol: '#', fgColor: 'goldenrod' }),
+        isCollider: true,
+        isDestructable: true,
+      }),
     }
   }
 
-  public get tiles(): TileCollection {
-    return this._tiles
-  }
-
-  public static get instance(): TileFactory {
+  static get instance(): TileFactory {
     if (!TileFactory._instance) {
       TileFactory._instance = new TileFactory()
     }

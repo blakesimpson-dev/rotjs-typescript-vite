@@ -1,9 +1,14 @@
 import { Glyph } from '@/glyph'
+import { TileProps } from '@/tile'
 
 export class Tile {
-  constructor(private _glyph: Glyph) {}
+  readonly glyph: Glyph
+  readonly isCollider: boolean
+  readonly isDestructable: boolean
 
-  public get glyph(): Glyph {
-    return this._glyph
+  constructor(protected readonly props: TileProps) {
+    this.glyph = props.glyph
+    this.isCollider = props.isCollider
+    this.isDestructable = props.isDestructable
   }
 }

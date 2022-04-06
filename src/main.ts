@@ -1,5 +1,6 @@
-import { Game } from '@/game'
 import './style.css'
+
+import { Game } from '@/game'
 
 const game = Game.instance
 const app = document.querySelector<HTMLDivElement>('#app')

@@ -1,4 +1,5 @@
-export type MapOptions = {
-  width: number
-  height: number
+import { Tile } from '@/tile'
+
+export interface MapProps {
+  tiles: Tile[][]
 }

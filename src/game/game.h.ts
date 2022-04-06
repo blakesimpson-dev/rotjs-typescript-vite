@@ -1,40 +1,48 @@
-import { DisplayOptions } from 'rot-js/lib/display/types'
 import { Display } from 'rot-js'
-import { SceneCollection, SceneFactory, Scene } from '@/scene'
+import { DisplayOptions } from 'rot-js/lib/display/types'
+
+import { Entity, EntityCollection, EntityFactory } from '@/entity'
+import { Scene, SceneCollection, SceneFactory } from '@/scene'
 import { TileCollection, TileFactory } from '@/tile'
 
 export class Game {
   private static _instance: Game
-
-  private _displayOptions: Partial<DisplayOptions>
-  private _display: Display
-  private _scenes: SceneCollection
-  private _tiles: TileCollection
   private _currentScene: Scene
 
-  constructor() {
-    this._displayOptions = { width: 128, height: 64 }
-    this._display = new Display(this._displayOptions)
-    this._scenes = SceneFactory.instance.scenes
-    this._tiles = TileFactory.instance.tiles
+  readonly displayOptions: Partial<DisplayOptions>
+  readonly display: Display
+  readonly scenes: SceneCollection
+  readonly tiles: TileCollection
+  readonly entities: EntityCollection
+  readonly player: Entity
 
-    this._currentScene = this._scenes.start
-    this._display.clear()
+  constructor() {
+    this.displayOptions = { width: 128, height: 64 }
+    this.display = new Display(this.displayOptions)
+    this.scenes = SceneFactory.instance.scenes
+    this.tiles = TileFactory.instance.tiles
+    this.entities = EntityFactory.instance.entities
+    this.player = this.entities.player
+
+    this._currentScene = this.scenes.start
+    this.display.clear()
     this._currentScene.enter()
-    this._currentScene.render(this._display)
+    this._currentScene.render(this.display)
 
     const bindEventToScene = (eventType: string): void => {
       window.addEventListener(eventType, (event: Event) => {
-        this._currentScene.processInputEvent(eventType, event)
+        this._currentScene.processInputEvent(eventType, event as KeyboardEvent)
+        this.display.clear()
+        this._currentScene.render(this.display)
       })
     }
 
     bindEventToScene('keydown')
-    bindEventToScene('keyup')
-    bindEventToScene('keypress')
+    // bindEventToScene('keyup')
+    // bindEventToScene('keypress')
   }
 
-  public static get instance(): Game {
+  static get instance(): Game {
     if (!Game._instance) {
       Game._instance = new Game()
     }
@@ -42,31 +50,15 @@ export class Game {
     return Game._instance
   }
 
-  public get displayOptions(): Partial<DisplayOptions> {
-    return this._displayOptions
-  }
-
-  public get display(): Display {
-    return this._display
-  }
-
-  public get scenes(): SceneCollection {
-    return this._scenes
-  }
-
-  public get tiles(): TileCollection {
-    return this._tiles
-  }
-
-  public get currentScene(): Scene {
+  get currentScene(): Scene {
     return this._currentScene
   }
 
-  public set currentScene(scene: Scene) {
+  set currentScene(scene: Scene) {
     this._currentScene.exit()
-    this._display.clear()
+    this.display.clear()
     this._currentScene = scene
     this._currentScene.enter()
-    this._currentScene.render(this._display)
+    this._currentScene.render(this.display)
   }
 }

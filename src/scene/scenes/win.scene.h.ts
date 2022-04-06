@@ -1,16 +1,17 @@
-import { Display, Color } from 'rot-js'
+import { Color, Display } from 'rot-js'
+
 import { Scene } from '@/scene'
 
-export class WinScene extends Scene {
-  public enter(): void {
+export class WinScene implements Scene {
+  enter(): void {
     console.log('enter WinScene')
   }
 
-  public exit(): void {
+  exit(): void {
     console.log('exit WinScene')
   }
 
-  public render(display: Display): void {
+  render(display: Display): void {
     for (let i = 0; i < 22; i++) {
       const r = Math.round(Math.random() * 255)
       const g = Math.round(Math.random() * 255)
@@ -20,7 +21,7 @@ export class WinScene extends Scene {
     }
   }
 
-  public processInputEvent(eventType: string, event: KeyboardEvent): void {
+  processInputEvent(eventType: string, event: KeyboardEvent): void {
     console.log(`${eventType} detected: ${event.keyCode}`)
   }
 }
