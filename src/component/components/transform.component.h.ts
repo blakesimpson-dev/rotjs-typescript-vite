@@ -4,16 +4,23 @@ import { Entity } from '@/entity'
 import { Map } from '@/map'
 
 export class TransformComponent implements Component {
-  name: string
+  name = 'Transform'
+  tags = []
+  position: Position
 
-  constructor(public entity: Entity, public position: Position) {
-    this.name = 'Transform'
+  constructor(public entity: Entity) {
+    this.position = Position.zero()
   }
 
   translate(x: number, y: number, map: Map): boolean {
     let success = false
-    const tile = map.getTile(x, y)
-    if (!tile.isCollider) {
+    const tile = map.getTileAt(x, y)
+    const target = map.getFirstEntityAt(x, y)
+
+    if (target) {
+      console.log(`Player collided with ${target.name}`)
+      success = false
+    } else if (!tile.isCollider) {
       this.position.x = x
       this.position.y = y
       success = true

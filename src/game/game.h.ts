@@ -1,30 +1,24 @@
-import { Display } from 'rot-js'
+import { Display as RotDisplay } from 'rot-js'
 import { DisplayOptions } from 'rot-js/lib/display/types'
 
-import { Entity, EntityCollection, EntityFactory } from '@/entity'
-import { Scene, SceneCollection, SceneFactory } from '@/scene'
-import { TileCollection, TileFactory } from '@/tile'
+import { Entity, EntityFactory } from '@/entity'
+import { Scene, SceneFactory } from '@/scene'
 
 export class Game {
   private static _instance: Game
   private _currentScene: Scene
 
   readonly displayOptions: Partial<DisplayOptions>
-  readonly display: Display
-  readonly scenes: SceneCollection
-  readonly tiles: TileCollection
-  readonly entities: EntityCollection
+  readonly display: RotDisplay
   readonly player: Entity
 
   constructor() {
     this.displayOptions = { width: 128, height: 64 }
-    this.display = new Display(this.displayOptions)
-    this.scenes = SceneFactory.instance.scenes
-    this.tiles = TileFactory.instance.tiles
-    this.entities = EntityFactory.instance.entities
-    this.player = this.entities.player
+    this.display = new RotDisplay(this.displayOptions)
+    this.player = EntityFactory.instance.entityCatalog.player
 
-    this._currentScene = this.scenes.start
+    this._currentScene = SceneFactory.instance.sceneCatalog.start
+    this.player.map = this._currentScene.map
     this.display.clear()
     this._currentScene.enter()
     this._currentScene.render(this.display)
@@ -32,8 +26,7 @@ export class Game {
     const bindEventToScene = (eventType: string): void => {
       window.addEventListener(eventType, (event: Event) => {
         this._currentScene.processInputEvent(eventType, event as KeyboardEvent)
-        this.display.clear()
-        this._currentScene.render(this.display)
+        this.refresh()
       })
     }
 
@@ -56,9 +49,13 @@ export class Game {
 
   set currentScene(scene: Scene) {
     this._currentScene.exit()
-    this.display.clear()
     this._currentScene = scene
     this._currentScene.enter()
+    this.refresh()
+  }
+
+  refresh(): void {
+    this.display.clear()
     this._currentScene.render(this.display)
   }
 }

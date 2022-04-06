@@ -1,25 +1,27 @@
-import { Display, KEYS, Map as RotMap } from 'rot-js'
+import { Display as RotDisplay, KEYS as RotKeys, Map as RotMap } from 'rot-js'
 
-import { TransformComponent } from '@/component'
+import { Components } from '@/component'
+import { Entity, EntityFactory } from '@/entity'
 import { Game } from '@/game'
+import { Glyph } from '@/glyph'
 import { Map } from '@/map'
-import { Scene } from '@/scene'
-import { Tile } from '@/tile'
+import { Scene, SceneFactory } from '@/scene'
+import { Tile, TileFactory } from '@/tile'
 
 export class PlayScene implements Scene {
-  map: Map = new Map({ tiles: [] })
+  map: Map | null = null
 
   enter(): void {
     const mapTiles: Tile[][] = []
-    // const width = Game.instance.displayOptions.width ?? 0
-    // const height = Game.instance.displayOptions.height ?? 0
+    // const width = displayOptions.width ?? 0
+    // const height = displayOptions.height ?? 0
     const width = 500
     const height = 500
 
     for (let x = 0; x < width; x++) {
       mapTiles.push([])
       for (let y = 0; y < height; y++) {
-        mapTiles[x].push(Game.instance.tiles.empty)
+        mapTiles[x].push(TileFactory.instance.tileCatalog.empty)
       }
     }
 
@@ -33,88 +35,108 @@ export class PlayScene implements Scene {
 
     generator.create((x, y, v) => {
       if (v === 1) {
-        mapTiles[x][y] = Game.instance.tiles.floor
+        mapTiles[x][y] = TileFactory.instance.tileCatalog.floor
       } else {
-        mapTiles[x][y] = Game.instance.tiles.wall
+        mapTiles[x][y] = TileFactory.instance.tileCatalog.wall
       }
     })
 
     this.map = new Map({ tiles: mapTiles })
 
-    const position = this.map.getRandomFloorTilePosition()
-    const playerPosition =
-      Game.instance.player.getComponent(TransformComponent).position
+    this.map.addEntityAtRandomFloorTilePosition(Game.instance.player)
 
-    playerPosition.x = position.x
-    playerPosition.y = position.y
+    for (let i = 0; i < 1000; i++) {
+      this.map.addEntityAtRandomFloorTilePosition(
+        EntityFactory.instance.createKobold()
+      )
+    }
+
+    this.map.engine.start()
   }
 
   exit(): void {
     console.log('exit WinScene')
   }
 
-  render(display: Display): void {
+  render(display: RotDisplay): void {
     const displayWidth = Game.instance.displayOptions.width ?? 0
     const displayHeight = Game.instance.displayOptions.height ?? 0
+    const mapWidth = this.map?.width ?? 0
+    const mapHeight = this.map?.height ?? 0
 
-    const playerPosition =
-      Game.instance.player.getComponent(TransformComponent).position
+    const playerPosition = Game.instance.player.getComponent(
+      Components.TransformComponent
+    ).position
 
     let rootX = Math.max(0, playerPosition.x - displayWidth / 2)
-    rootX = Math.min(rootX, this.map.width - displayWidth)
+    rootX = Math.min(rootX, mapWidth - displayWidth)
 
     let rootY = Math.max(0, playerPosition.y - displayHeight / 2)
-    rootY = Math.min(rootY, this.map.height - displayHeight)
+    rootY = Math.min(rootY, mapHeight - displayHeight)
 
     for (let x = rootX; x < rootX + displayWidth; x++) {
       for (let y = rootY; y < rootY + displayHeight; y++) {
-        const glyph = this.map.getTile(x, y).glyph
+        const glyph = this.map?.getTileAt(x, y).glyph
         display.draw(
           x - rootX,
           y - rootY,
-          glyph.symbol,
-          glyph.fgColor,
-          glyph.bgColor
+          glyph?.symbol ?? Glyph.errorSymbol,
+          glyph?.fgColor ?? Glyph.errorFgColor,
+          glyph?.bgColor ?? Glyph.errorBgColor
         )
       }
     }
 
-    const playerGlyph = Game.instance.player.glyph
-
-    display.draw(
-      playerPosition.x - rootX,
-      playerPosition.y - rootY,
-      playerGlyph.symbol,
-      playerGlyph.fgColor,
-      playerGlyph.bgColor
-    )
+    this.map?.entities.forEach((entity: Entity) => {
+      const entityPosition = entity.getComponent(
+        Components.TransformComponent
+      ).position
+      if (
+        entityPosition.x >= rootX &&
+        entityPosition.y >= rootY &&
+        entityPosition.x < rootX + displayWidth &&
+        entityPosition.y < rootY + displayHeight
+      ) {
+        display.draw(
+          entityPosition.x - rootX,
+          entityPosition.y - rootY,
+          entity.glyph.symbol,
+          entity.glyph.fgColor,
+          entity.glyph.bgColor
+        )
+      }
+    })
   }
 
   processInputEvent(eventType: string, event: KeyboardEvent): void {
     if (eventType === 'keydown') {
       switch (event.keyCode) {
-        case KEYS.VK_RETURN:
-          Game.instance.currentScene = Game.instance.scenes.win
+        case RotKeys.VK_RETURN:
+          Game.instance.currentScene = SceneFactory.instance.sceneCatalog.win
           break
 
-        case KEYS.VK_ESCAPE:
-          Game.instance.currentScene = Game.instance.scenes.lose
+        case RotKeys.VK_ESCAPE:
+          Game.instance.currentScene = SceneFactory.instance.sceneCatalog.lose
           break
 
-        case KEYS.VK_LEFT:
+        case RotKeys.VK_LEFT:
           this.movePlayer(-1, 0)
+          this.map?.engine.unlock()
           break
 
-        case KEYS.VK_RIGHT:
+        case RotKeys.VK_RIGHT:
           this.movePlayer(1, 0)
+          this.map?.engine.unlock()
           break
 
-        case KEYS.VK_UP:
+        case RotKeys.VK_UP:
           this.movePlayer(0, -1)
+          this.map?.engine.unlock()
           break
 
-        case KEYS.VK_DOWN:
+        case RotKeys.VK_DOWN:
           this.movePlayer(0, 1)
+          this.map?.engine.unlock()
           break
 
         default:
@@ -124,11 +146,14 @@ export class PlayScene implements Scene {
   }
 
   private movePlayer(dX: number, dY: number): void {
-    const playerTransform =
-      Game.instance.player.getComponent(TransformComponent)
+    const playerTransform = Game.instance.player.getComponent(
+      Components.TransformComponent
+    )
 
     const newX = playerTransform.position.x + dX
     const newY = playerTransform.position.y + dY
-    playerTransform.translate(newX, newY, this.map)
+    if (this.map) {
+      playerTransform.translate(newX, newY, this.map)
+    }
   }
 }

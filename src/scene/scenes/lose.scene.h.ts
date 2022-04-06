@@ -1,8 +1,11 @@
-import { Display } from 'rot-js'
+import { Display as RotDisplay } from 'rot-js'
 
+import { Map } from '@/map'
 import { Scene } from '@/scene'
 
 export class LoseScene implements Scene {
+  map: Map | null = null
+
   enter(): void {
     console.log('enter LoseScene')
   }
@@ -11,7 +14,7 @@ export class LoseScene implements Scene {
     console.log('exit LoseScene')
   }
 
-  render(display: Display): void {
+  render(display: RotDisplay): void {
     for (let i = 0; i < 22; i++) {
       display.drawText(2, i + 1, '%b{red}You lose! :(')
     }

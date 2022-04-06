@@ -1,19 +1,30 @@
 import { Component } from '@/component'
 import { EntityProps } from '@/entity'
 import { Glyph } from '@/glyph'
+import { Map } from '@/map'
 
 type AbstractComponent<T> = () => unknown & { prototype: T }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- unknown[] never matches ctor
 type Constructor<T> = AbstractComponent<T> | { new (...args: any[]): T }
 
 export abstract class Entity {
-  glyph: Glyph
-  name: string
+  private _map: Map | null = null
+
+  readonly glyph: Glyph
+  readonly name: string
   readonly components: Component[] = []
 
-  constructor(protected readonly _props: EntityProps) {
-    this.glyph = _props.glyph
-    this.name = _props.name
+  constructor(protected readonly props: EntityProps) {
+    this.glyph = props.glyph
+    this.name = props.name
+  }
+
+  get map(): Map | null {
+    return this._map
+  }
+
+  set map(map: Map | null) {
+    this._map = map
   }
 
   getComponent<C extends Component>(ctor: Constructor<C>): C {
@@ -23,7 +34,7 @@ export abstract class Entity {
       }
     }
     throw new Error(
-      `GetComponent: Component ${ctor.name} not found on Entity ${this.constructor.name}`
+      `getComponent(ctor: Constructor<C>): Component ${ctor.name} not found on Entity ${this.constructor.name}`
     )
   }
 
@@ -34,6 +45,12 @@ export abstract class Entity {
       }
     }
     return false
+  }
+
+  getComponentsWithTag(tag: string): Component[] {
+    return this.components.filter((component: Component) => {
+      return component.tags.indexOf(tag) !== -1
+    })
   }
 
   addComponent(component: Component): void {
@@ -59,7 +76,7 @@ export abstract class Entity {
       this.components.splice(index, 1)
     } else {
       throw new Error(
-        `RemoveComponent: Component ${ctor.name} not found on Entity ${this.constructor.name}`
+        `removeComponent(ctor: Constructor<C>): Component ${ctor.name} not found on Entity ${this.constructor.name}`
       )
     }
   }

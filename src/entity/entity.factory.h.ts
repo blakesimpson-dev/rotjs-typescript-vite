@@ -1,17 +1,17 @@
-import { EntityCollection, PlayerEntity } from '@/entity'
+import { Entities, Entity, EntityCatalog } from '@/entity'
 
 export class EntityFactory {
   private static _instance: EntityFactory
-  private readonly _entities: EntityCollection
+  readonly entityCatalog: EntityCatalog
 
   constructor() {
-    this._entities = {
-      player: new PlayerEntity(),
+    this.entityCatalog = {
+      player: new Entities.PlayerEntity(),
     }
   }
 
-  get entities(): EntityCollection {
-    return this._entities
+  createKobold(): Entity {
+    return new Entities.KoboldEntity()
   }
 
   static get instance(): EntityFactory {
