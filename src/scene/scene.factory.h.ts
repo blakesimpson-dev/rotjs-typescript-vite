@@ -1,21 +1,15 @@
-import {
-  LoseScene,
-  PlayScene,
-  SceneCollection,
-  StartScene,
-  WinScene,
-} from '@/scene'
+import { SceneCatalog, Scenes } from '@/scene'
 
 export class SceneFactory {
   private static _instance: SceneFactory
-  readonly scenes: SceneCollection
+  readonly sceneCatalog: SceneCatalog
 
   constructor() {
-    this.scenes = {
-      start: new StartScene(),
-      play: new PlayScene(),
-      win: new WinScene(),
-      lose: new LoseScene(),
+    this.sceneCatalog = {
+      start: new Scenes.StartScene(),
+      play: new Scenes.PlayScene(),
+      win: new Scenes.WinScene(),
+      lose: new Scenes.LoseScene(),
     }
   }
 

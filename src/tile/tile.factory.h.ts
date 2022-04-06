@@ -1,27 +1,20 @@
-import { Glyph } from '@/glyph'
-import { Tile, TileCollection } from '@/tile'
+import { Biome, TileCatalog, Tiles } from '@/tile'
 
 export class TileFactory {
   private static _instance: TileFactory
-  readonly tiles: TileCollection
+  tileCatalog: TileCatalog
 
   constructor() {
-    this.tiles = {
-      empty: new Tile({
-        glyph: new Glyph({}),
-        isCollider: false,
-        isDestructable: false,
-      }),
-      floor: new Tile({
-        glyph: new Glyph({ symbol: '.' }),
-        isCollider: false,
-        isDestructable: false,
-      }),
-      wall: new Tile({
-        glyph: new Glyph({ symbol: '#', fgColor: 'goldenrod' }),
-        isCollider: true,
-        isDestructable: true,
-      }),
+    this.tileCatalog = {}
+    this.setBiome('Cave')
+  }
+
+  setBiome(biome: Biome): void {
+    console.log(`TileFactory.setBiome(biome: Biome): ${biome}`)
+    this.tileCatalog = {
+      empty: new Tiles.EmptyTile(),
+      floor: new Tiles.FloorTile(biome),
+      wall: new Tiles.WallTile(biome),
     }
   }
 

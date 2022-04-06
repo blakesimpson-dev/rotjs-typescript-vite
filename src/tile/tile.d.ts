@@ -1,9 +1,12 @@
 import { Glyph } from '@/glyph'
 
-export type TileCollection = Record<string, Tile>
+export type Biome = 'Cave' | 'Forest' | undefined
 
-export interface TileProps {
+export interface Tile {
+  biome?: Biome
   glyph: Glyph
   isCollider: boolean
   isDestructable: boolean
 }
+
+export type TileCatalog = Record<string, Tile>

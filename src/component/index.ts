@@ -1,3 +1,3 @@
 export * from './component.d'
 export * from './component.factory.h'
-export * from './components'
+export * as Components from './components'

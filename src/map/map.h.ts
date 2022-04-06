@@ -1,6 +1,9 @@
+import { Engine as RotEngine, Scheduler as RotScheduler } from 'rot-js'
+
 import { Position } from '@/common'
-import { Game } from '@/game'
-import { Tile } from '@/tile'
+import { Components } from '@/component'
+import { Entity } from '@/entity'
+import { Tile, TileFactory } from '@/tile'
 
 import { MapProps } from './map.d'
 
@@ -9,18 +12,86 @@ export class Map {
   readonly width: number
   readonly height: number
 
+  readonly entities: Entity[] = []
+  readonly scheduler = new RotScheduler.Simple()
+  readonly engine = new RotEngine(this.scheduler)
+
   constructor(protected readonly props: MapProps) {
     this.tiles = props.tiles
     this.width = props.tiles.length
     this.height = props.tiles.length ?? props.tiles[0].length
   }
 
-  getTile(x: number, y: number): Tile {
-    if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
-      return Game.instance.tiles.empty
+  addEntity(entity: Entity): void {
+    if (!entity.hasComponent(Components.TransformComponent)) {
+      throw new Error(
+        `addEntity(entity: Entity): Entity cannot be added to the map without a TransformComponent`
+      )
     } else {
-      return this.tiles[x][y] || Game.instance.tiles.empty
+      const entityPosition = entity.getComponent(
+        Components.TransformComponent
+      ).position
+      if (
+        entityPosition.x < 0 ||
+        entityPosition.x >= this.width ||
+        entityPosition.y < 0 ||
+        entityPosition.y >= this.height
+      ) {
+        throw new Error(
+          `addEntity(entity: Entity): entity.Transformcomponent.position is out of bounds`
+        )
+      }
     }
+
+    entity.map = this
+    this.entities.push(entity)
+    if (entity.hasComponent(Components.ActorComponent)) {
+      this.scheduler.add(entity.getComponent(Components.ActorComponent), true)
+    }
+  }
+
+  addEntityAtRandomFloorTilePosition(entity: Entity): void {
+    if (!entity.hasComponent(Components.TransformComponent)) {
+      throw new Error(
+        `addEntity(entity: Entity): Entity cannot be added to the map without a TransformComponent`
+      )
+    }
+
+    const randomFloorTilePosition = this.getRandomFloorTilePosition()
+    const entityPosition = entity.getComponent(
+      Components.TransformComponent
+    ).position
+    entityPosition.x = randomFloorTilePosition.x
+    entityPosition.y = randomFloorTilePosition.y
+    this.addEntity(entity)
+  }
+
+  getTileAt(x: number, y: number): Tile {
+    if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+      return TileFactory.instance.tileCatalog.empty
+    } else {
+      return this.tiles[x][y] || TileFactory.instance.tileCatalog.empty
+    }
+  }
+
+  getFirstEntityAt(x: number, y: number): Entity | null {
+    return this.entities.filter((entity: Entity) => {
+      const entityPosition = entity.getComponent(
+        Components.TransformComponent
+      ).position
+      return entityPosition?.x === x && entityPosition?.y === y
+    })[0]
+  }
+
+  getEntitiesAt(x: number, y: number): Entity[] {
+    return this.entities.filter((entity: Entity) => {
+      const entityPosition = entity.hasComponent(Components.TransformComponent)
+        ? entity.getComponent(Components.TransformComponent).position
+        : null
+      return entityPosition
+        ? entityPosition.x === x && entityPosition.y === y
+        : null
+    })
   }
 
   getRandomFloorTilePosition(): Position {
@@ -28,13 +99,16 @@ export class Map {
     do {
       x = Math.floor(Math.random() * this.width)
       y = Math.floor(Math.random() * this.height)
-    } while (this.getTile(x, y) !== Game.instance.tiles.floor)
+    } while (
+      this.getTileAt(x, y) !== TileFactory.instance.tileCatalog.floor ||
+      this.getFirstEntityAt(x, y)
+    )
     return new Position(x, y)
   }
 
   destructTile(x: number, y: number): void {
-    if (this.getTile(x, y).isDestructable) {
-      this.tiles[x][y] = Game.instance.tiles.floor
+    if (this.getTileAt(x, y).isDestructable) {
+      this.tiles[x][y] = TileFactory.instance.tileCatalog.floor
     }
   }
 }
