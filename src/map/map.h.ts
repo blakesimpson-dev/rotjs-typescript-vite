@@ -1,30 +1,40 @@
+import { Position } from '@/common'
 import { Game } from '@/game'
 import { Tile } from '@/tile'
 
+import { MapProps } from './map.d'
+
 export class Map {
-  private _tiles: Tile[][]
-  private _width: number
-  private _height: number
+  readonly tiles: Tile[][]
+  readonly width: number
+  readonly height: number
 
-  constructor(protected tiles: Tile[][]) {
-    this._tiles = tiles
-    this._width = tiles.length
-    this._height = tiles.length ?? tiles[0].length
+  constructor(protected readonly props: MapProps) {
+    this.tiles = props.tiles
+    this.width = props.tiles.length
+    this.height = props.tiles.length ?? props.tiles[0].length
   }
 
-  public get width(): number {
-    return this._width
-  }
-
-  public get height(): number {
-    return this._height
-  }
-
-  public getTile(x: number, y: number): Tile {
-    if (x < 0 || x >= this._width || y < 0 || y >= this._height) {
+  getTile(x: number, y: number): Tile {
+    if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
       return Game.instance.tiles.empty
     } else {
-      return this._tiles[x][y] || Game.instance.tiles.empty
+      return this.tiles[x][y] || Game.instance.tiles.empty
+    }
+  }
+
+  getRandomFloorTilePosition(): Position {
+    let x, y
+    do {
+      x = Math.floor(Math.random() * this.width)
+      y = Math.floor(Math.random() * this.height)
+    } while (this.getTile(x, y) !== Game.instance.tiles.floor)
+    return new Position(x, y)
+  }
+
+  destructTile(x: number, y: number): void {
+    if (this.getTile(x, y).isDestructable) {
+      this.tiles[x][y] = Game.instance.tiles.floor
     }
   }
 }

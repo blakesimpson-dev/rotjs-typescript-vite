@@ -1,13 +1,17 @@
-import { SceneCollection } from './'
-import { StartScene, PlayScene, WinScene, LoseScene } from '@/scene'
+import {
+  LoseScene,
+  PlayScene,
+  SceneCollection,
+  StartScene,
+  WinScene,
+} from '@/scene'
 
 export class SceneFactory {
   private static _instance: SceneFactory
-
-  private _scenes: SceneCollection
+  readonly scenes: SceneCollection
 
   constructor() {
-    this._scenes = {
+    this.scenes = {
       start: new StartScene(),
       play: new PlayScene(),
       win: new WinScene(),
@@ -15,11 +19,7 @@ export class SceneFactory {
     }
   }
 
-  public get scenes(): SceneCollection {
-    return this._scenes
-  }
-
-  public static get instance(): SceneFactory {
+  static get instance(): SceneFactory {
     if (!SceneFactory._instance) {
       SceneFactory._instance = new SceneFactory()
     }
