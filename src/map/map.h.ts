@@ -50,14 +50,14 @@ export class Map {
     }
   }
 
-  addEntityAtRandomFloorTilePosition(entity: Entity): void {
+  addEntityAtRndFloorTilePos(entity: Entity): void {
     if (!entity.hasComponent(Components.TransformComponent)) {
       throw new Error(
         `addEntity(entity: Entity): Entity cannot be added to the map without a TransformComponent`
       )
     }
 
-    const randomFloorTilePosition = this.getRandomFloorTilePosition()
+    const randomFloorTilePosition = this.getRndFloorTilePos()
     const entityPosition = entity.getComponent(
       Components.TransformComponent
     ).position
@@ -66,11 +66,16 @@ export class Map {
     this.addEntity(entity)
   }
 
-  getTileAt(x: number, y: number): Tile {
-    if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
-      return TileFactory.instance.tileCatalog.empty
-    } else {
-      return this.tiles[x][y] || TileFactory.instance.tileCatalog.empty
+  removeEntity(entity: Entity): void {
+    const entityIndex = this.entities.indexOf(entity)
+    if (entityIndex === -1) {
+      throw new Error(
+        `removeEntity(entity: Entity): Entity cannot be removed as it does not exist in entities: Entity[]`
+      )
+    }
+    this.entities.splice(entityIndex, 1)
+    if (entity.hasComponent(Components.ActorComponent)) {
+      this.scheduler.remove(entity)
     }
   }
 
@@ -94,15 +99,27 @@ export class Map {
     })
   }
 
-  getRandomFloorTilePosition(): Position {
+  isEmptyFloorTileAt(x: number, y: number): boolean {
+    return (
+      this.getTileAt(x, y) === TileFactory.instance.tileCatalog.floor &&
+      !this.getFirstEntityAt(x, y)
+    )
+  }
+
+  getTileAt(x: number, y: number): Tile {
+    if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+      return TileFactory.instance.tileCatalog.empty
+    } else {
+      return this.tiles[x][y] || TileFactory.instance.tileCatalog.empty
+    }
+  }
+
+  getRndFloorTilePos(): Position {
     let x, y
     do {
       x = Math.floor(Math.random() * this.width)
       y = Math.floor(Math.random() * this.height)
-    } while (
-      this.getTileAt(x, y) !== TileFactory.instance.tileCatalog.floor ||
-      this.getFirstEntityAt(x, y)
-    )
+    } while (!this.isEmptyFloorTileAt(x, y))
     return new Position(x, y)
   }
 

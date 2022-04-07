@@ -1,5 +1,5 @@
 import { Position } from '@/common'
-import { Component } from '@/component'
+import { Component, Components } from '@/component'
 import { Entity } from '@/entity'
 import { Map } from '@/map'
 
@@ -12,13 +12,18 @@ export class TransformComponent implements Component {
     this.position = Position.zero()
   }
 
-  translate(x: number, y: number, map: Map): boolean {
+  tryMove(x: number, y: number, map: Map): boolean {
     let success = false
     const tile = map.getTileAt(x, y)
     const target = map.getFirstEntityAt(x, y)
 
     if (target) {
-      console.log(`Player collided with ${target.name}`)
+      if (this.entity.hasComponent(Components.AttackComponent)) {
+        const entityAttack = this.entity.getComponent(
+          Components.AttackComponent
+        )
+        entityAttack.dealDamage(target)
+      }
       success = false
     } else if (!tile.isCollider) {
       this.position.x = x

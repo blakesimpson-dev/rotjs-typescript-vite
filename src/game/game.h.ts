@@ -13,7 +13,13 @@ export class Game {
   readonly player: Entity
 
   constructor() {
-    this.displayOptions = { width: 128, height: 64 }
+    this.displayOptions = {
+      width: 128,
+      height: 64,
+      fontSize: 16,
+      forceSquareRatio: true,
+      fontFamily: 'unscii-8',
+    }
     this.display = new RotDisplay(this.displayOptions)
     this.player = EntityFactory.instance.entityCatalog.player
 

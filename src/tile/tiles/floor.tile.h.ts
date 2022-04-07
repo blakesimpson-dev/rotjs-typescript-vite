@@ -1,3 +1,4 @@
+import { ColorCode } from '@/common'
 import { Glyph } from '@/glyph'
 import { Biome, Tile } from '@/tile'
 
@@ -7,17 +8,17 @@ export class FloorTile implements Tile {
   readonly isDestructable: boolean
 
   constructor(public biome: Biome) {
-    let symbol, fgColor, bgColor
+    let symbol, fgColor: ColorCode, bgColor: ColorCode
     switch (biome) {
       case 'Cave':
         symbol = '.'
-        fgColor = 'white'
+        fgColor = 'goldenrod'
         bgColor = Glyph.defaultBgColor
         break
 
       case 'Forest':
         symbol = '.'
-        fgColor = 'green'
+        fgColor = 'mediumspringgreen'
         bgColor = Glyph.defaultBgColor
         break
 

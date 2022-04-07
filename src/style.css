@@ -1,3 +1,13 @@
+@font-face {
+  font-family: "unscii-16";
+  src: url("/unscii-16.woff") format('woff');
+}
+
+@font-face {
+  font-family: "unscii-8";
+  src: url("/unscii-8.woff") format('woff');
+}
+
 html {
   width: 100%;
   height: 100%;
@@ -9,6 +19,9 @@ body {
   width: 100%;
   height: 100%;
   background-color: black;
+  font-family: "unscii-8";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 canvas {
@@ -16,9 +29,6 @@ canvas {
 }
 
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   height: 100%;
   display: flex;
   flex-direction: column;
