@@ -4,7 +4,6 @@ import { Game } from '@/game'
 import { fetchAsset } from '@/utils'
 
 let logoAsset, splashAsset
-
 await fetchAsset('/assets/ascii/logo72x8.txt').then((text) => {
   logoAsset = text
 })

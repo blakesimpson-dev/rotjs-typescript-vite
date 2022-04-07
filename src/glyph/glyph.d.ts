@@ -1,5 +1,7 @@
+import { ColorCode } from '@/common'
+
 export interface GlyphProps {
   symbol?: string
-  fgColor?: string
-  bgColor?: string
+  fgColor?: ColorCode
+  bgColor?: ColorCode
 }

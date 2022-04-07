@@ -43,11 +43,11 @@ export class PlayScene implements Scene {
 
     this.map = new Map({ tiles: mapTiles })
 
-    this.map.addEntityAtRandomFloorTilePosition(Game.instance.player)
+    this.map.addEntityAtRndFloorTilePos(Game.instance.player)
 
     for (let i = 0; i < 1000; i++) {
-      this.map.addEntityAtRandomFloorTilePosition(
-        EntityFactory.instance.createKobold()
+      this.map.addEntityAtRndFloorTilePos(
+        EntityFactory.instance.createKoboldEntity()
       )
     }
 
@@ -153,7 +153,7 @@ export class PlayScene implements Scene {
     const newX = playerTransform.position.x + dX
     const newY = playerTransform.position.y + dY
     if (this.map) {
-      playerTransform.translate(newX, newY, this.map)
+      playerTransform.tryMove(newX, newY, this.map)
     }
   }
 }

@@ -9,7 +9,9 @@ export class KoboldEntity extends Entity {
       name: 'Kobold',
     })
 
-    this.addComponent(ComponentFactory.instance.createTransform(this))
-    this.addComponent(ComponentFactory.instance.createActor(this))
+    this.addComponent(ComponentFactory.instance.createTransformComponent(this))
+    this.addComponent(ComponentFactory.instance.createActorComponent(this))
+    this.addComponent(ComponentFactory.instance.createHealthComponent(this))
+    this.addComponent(ComponentFactory.instance.createAttackComponent(this))
   }
 }

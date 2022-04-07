@@ -10,7 +10,7 @@ export class EntityFactory {
     }
   }
 
-  createKobold(): Entity {
+  createKoboldEntity(): Entity {
     return new Entities.KoboldEntity()
   }
 
