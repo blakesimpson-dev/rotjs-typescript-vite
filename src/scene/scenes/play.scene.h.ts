@@ -1,10 +1,11 @@
 import { Display as RotDisplay, KEYS as RotKeys, Map as RotMap } from 'rot-js'
 
+import { Position } from '@/common'
 import { Components } from '@/component'
 import { Entity, EntityFactory } from '@/entity'
 import { Game } from '@/game'
 import { Glyph } from '@/glyph'
-import { Map } from '@/map'
+import { Map, MapTile } from '@/map'
 import { Scene, SceneFactory } from '@/scene'
 import { Tile, TileFactory } from '@/tile'
 
@@ -12,16 +13,17 @@ export class PlayScene implements Scene {
   map: Map | null = null
 
   enter(): void {
-    const mapTiles: Tile[][] = []
-    // const width = displayOptions.width ?? 0
-    // const height = displayOptions.height ?? 0
-    const width = 500
-    const height = 500
+    const mapTiles: MapTile[][] = []
+    const width = 200
+    const height = 200
 
     for (let x = 0; x < width; x++) {
       mapTiles.push([])
       for (let y = 0; y < height; y++) {
-        mapTiles[x].push(TileFactory.instance.tileCatalog.empty)
+        mapTiles[x].push({
+          tile: TileFactory.instance.tileCatalog.empty,
+          pos: Position.zero(),
+        })
       }
     }
 
@@ -35,13 +37,21 @@ export class PlayScene implements Scene {
 
     generator.create((x, y, v) => {
       if (v === 1) {
-        mapTiles[x][y] = TileFactory.instance.tileCatalog.floor
+        mapTiles[x][y].tile = TileFactory.instance.tileCatalog.floor
       } else {
-        mapTiles[x][y] = TileFactory.instance.tileCatalog.wall
+        mapTiles[x][y].tile = TileFactory.instance.tileCatalog.wall
       }
+      if (y === 0 || y === height - 1) {
+        mapTiles[x][y].tile = TileFactory.instance.tileCatalog.bounds
+      } else if (x === 0 || x === width - 1) {
+        mapTiles[x][y].tile = TileFactory.instance.tileCatalog.bounds
+      }
+
+      mapTiles[x][y].pos.x = x
+      mapTiles[x][y].pos.y = y
     })
 
-    this.map = new Map({ tiles: mapTiles })
+    this.map = new Map({ mapTiles: mapTiles })
 
     this.map.addEntityAtRndFloorTilePos(Game.instance.player)
 
@@ -59,8 +69,8 @@ export class PlayScene implements Scene {
   }
 
   render(display: RotDisplay): void {
-    const displayWidth = Game.instance.displayOptions.width ?? 0
-    const displayHeight = Game.instance.displayOptions.height ?? 0
+    const displayWidth = Game.instance.viewDisplay._options.width - 2
+    const displayHeight = Game.instance.viewDisplay._options.height - 2
     const mapWidth = this.map?.width ?? 0
     const mapHeight = this.map?.height ?? 0
 
@@ -76,16 +86,40 @@ export class PlayScene implements Scene {
 
     for (let x = rootX; x < rootX + displayWidth; x++) {
       for (let y = rootY; y < rootY + displayHeight; y++) {
-        const glyph = this.map?.getTileAt(x, y).glyph
+        const glyph = this.map?.getTileAt(x, y).tile.glyph
         display.draw(
-          x - rootX,
-          y - rootY,
+          x - rootX + 1,
+          y - rootY + 1,
           glyph?.symbol ?? Glyph.errorSymbol,
           glyph?.fgColor ?? Glyph.errorFgColor,
           glyph?.bgColor ?? Glyph.errorBgColor
         )
       }
     }
+
+    const lineDebug = this.map?.getTilesAlongLine(0, 0, 20, 20)
+    console.log(lineDebug?.length)
+    lineDebug?.forEach((tile) => {
+      display.draw(
+        tile.pos.x - rootX + 1,
+        tile.pos.y - rootY + 1,
+        '!',
+        'yellow',
+        tile.tile.glyph?.bgColor ?? Glyph.errorBgColor
+      )
+    })
+
+    const radiusDebug = this.map?.getTilesInRadius(30, 10, 10)
+    console.log(radiusDebug?.length)
+    radiusDebug?.forEach((tile) => {
+      display.draw(
+        tile.pos.x - rootX + 1,
+        tile.pos.y - rootY + 1,
+        'X',
+        'green',
+        tile.tile.glyph?.bgColor ?? Glyph.errorBgColor
+      )
+    })
 
     this.map?.entities.forEach((entity: Entity) => {
       const entityPosition = entity.getComponent(
@@ -98,8 +132,8 @@ export class PlayScene implements Scene {
         entityPosition.y < rootY + displayHeight
       ) {
         display.draw(
-          entityPosition.x - rootX,
-          entityPosition.y - rootY,
+          entityPosition.x - rootX + 1,
+          entityPosition.y - rootY + 1,
           entity.glyph.symbol,
           entity.glyph.fgColor,
           entity.glyph.bgColor

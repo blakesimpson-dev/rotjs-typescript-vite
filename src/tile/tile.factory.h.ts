@@ -5,11 +5,11 @@ export class TileFactory {
   tileCatalog: TileCatalog = {}
 
   setBiome(biome?: Biome): void {
-    console.log(`TileFactory.setBiome(biome: Biome): ${biome}`)
     this.tileCatalog = {
       empty: new Tiles.EmptyTile(),
       floor: new Tiles.FloorTile(biome),
       wall: new Tiles.WallTile(biome),
+      bounds: new Tiles.BoundsTile(biome),
     }
   }
 

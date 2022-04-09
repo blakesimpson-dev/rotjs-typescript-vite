@@ -1,21 +1,25 @@
 import { Component } from '@/component'
 import { Entity } from '@/entity'
+import { Game } from '@/game'
 
 export class HealthComponent implements Component {
   name = 'Health'
   tags = []
-  maxHp: number
-  currentHp: number
+  maxHpValue: number
+  hpValue: number
 
-  constructor(public entity: Entity, protected readonly initHp?: number) {
-    this.maxHp = initHp ?? 1
-    this.currentHp = this.maxHp
+  constructor(
+    public entity: Entity,
+    protected readonly initMaxHpValue?: number
+  ) {
+    this.maxHpValue = initMaxHpValue ?? 20
+    this.hpValue = this.maxHpValue
   }
 
-  takeDamage(damage: number): void {
-    this.currentHp -= damage
-    if (this.currentHp <= 0) {
-      console.log(`${this.entity.name} has died`)
+  recieveAttack(attackValue: number): void {
+    this.hpValue -= attackValue
+    if (this.hpValue <= 0) {
+      Game.instance.messageLog.addMessage(`${this.entity.name} has died`)
       this.entity.map?.removeEntity(this.entity)
     }
   }

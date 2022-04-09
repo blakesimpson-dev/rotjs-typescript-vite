@@ -5,10 +5,10 @@ import { Components } from '@/component'
 import { Entity } from '@/entity'
 import { Tile, TileFactory } from '@/tile'
 
-import { MapProps } from './map.d'
+import { MapProps, MapTile } from './map.d'
 
 export class Map {
-  readonly tiles: Tile[][]
+  readonly mapTiles: MapTile[][]
   readonly width: number
   readonly height: number
 
@@ -17,9 +17,9 @@ export class Map {
   readonly engine = new RotEngine(this.scheduler)
 
   constructor(protected readonly props: MapProps) {
-    this.tiles = props.tiles
-    this.width = props.tiles.length
-    this.height = props.tiles.length ?? props.tiles[0].length
+    this.mapTiles = props.mapTiles
+    this.width = props.mapTiles.length
+    this.height = props.mapTiles.length ?? props.mapTiles[0].length
   }
 
   addEntity(entity: Entity): void {
@@ -99,18 +99,42 @@ export class Map {
     })
   }
 
+  // getEntitiesInRadius(
+  //   centerX: number,
+  //   centerY: number,
+  //   radius: number
+  // ): Entity[] {
+  //   let results: Entity[]
+  //   let leftX = centerX - radius
+  //   let rightX = centerX + radius
+  //   let topY = centerY - radius
+  //   let bottomY = centerY + radius
+
+  //   return entities
+  // }
+
   isEmptyFloorTileAt(x: number, y: number): boolean {
     return (
-      this.getTileAt(x, y) === TileFactory.instance.tileCatalog.floor &&
+      this.getTileAt(x, y).tile === TileFactory.instance.tileCatalog.floor &&
       !this.getFirstEntityAt(x, y)
     )
   }
 
-  getTileAt(x: number, y: number): Tile {
+  // getTileAt(x: number, y: number): Tile {
+  //   if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+  //     return TileFactory.instance.tileCatalog.empty
+  //   } else {
+  //     return this.mapTiles[x][y].tile || TileFactory.instance.tileCatalog.empty
+  //   }
+  // }
+
+  getTileAt(x: number, y: number): MapTile {
     if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
-      return TileFactory.instance.tileCatalog.empty
+      throw new Error(
+        `getTileAt(x: number, y: number): MapTile requested is out of bounds`
+      )
     } else {
-      return this.tiles[x][y] || TileFactory.instance.tileCatalog.empty
+      return this.mapTiles[x][y]
     }
   }
 
@@ -124,8 +148,133 @@ export class Map {
   }
 
   destructTile(x: number, y: number): void {
-    if (this.getTileAt(x, y).isDestructable) {
-      this.tiles[x][y] = TileFactory.instance.tileCatalog.floor
+    if (this.getTileAt(x, y).tile.isDestructable) {
+      this.mapTiles[x][y].tile = TileFactory.instance.tileCatalog.floor
     }
+  }
+
+  clampX(x: number): number {
+    return x < 0 ? 0 : x > this.width - 1 ? this.width - 1 : x
+  }
+
+  clampY(y: number): number {
+    return y < 0 ? 0 : y > this.height - 1 ? this.height - 1 : y
+  }
+
+  getTilesAlongLine(
+    originX: number,
+    originY: number,
+    destX: number,
+    destY: number
+  ): MapTile[] {
+    const result: MapTile[] = []
+
+    originX = this.clampX(originX)
+    originY = this.clampY(originY)
+    destX = this.clampX(destX)
+    destY = this.clampY(destY)
+
+    const dx = Math.abs(destX - originX)
+    const dy = Math.abs(destY - originY)
+
+    const sx = originX < destX ? 1 : -1
+    const sy = originY < destY ? 1 : -1
+    let err = dx - dy
+
+    while (true) {
+      result.push(this.getTileAt(originX, originY))
+      if (originX === destX && originY === destY) {
+        break
+      }
+      const e2 = 2 * err
+      if (e2 > -dy) {
+        err = err - dy
+        originX = originX + sx
+      }
+      if (e2 < dx) {
+        err = err + dx
+        originY = originY + sy
+      }
+    }
+    return result
+  }
+
+  getTilesInRadius(
+    centerX: number,
+    centerY: number,
+    radius: number
+  ): MapTile[] {
+    const result: MapTile[] = []
+
+    const discovered = new Set<number>()
+
+    let d = (5 - radius * 4) / 4
+    let x = 0
+    let y = radius
+
+    do {
+      this.getTilesAlongLine(
+        centerX + x,
+        centerY + y,
+        centerX - x,
+        centerY + y
+      ).forEach((tile) => {
+        if (this.addToHashSet(discovered, tile)) {
+          result.push(tile)
+        }
+      })
+
+      this.getTilesAlongLine(
+        centerX - x,
+        centerY - y,
+        centerX + x,
+        centerY - y
+      ).forEach((tile) => {
+        if (this.addToHashSet(discovered, tile)) {
+          result.push(tile)
+        }
+      })
+
+      this.getTilesAlongLine(
+        centerX + y,
+        centerY + x,
+        centerX - y,
+        centerY + x
+      ).forEach((tile) => {
+        if (this.addToHashSet(discovered, tile)) {
+          result.push(tile)
+        }
+      })
+
+      this.getTilesAlongLine(
+        centerX + y,
+        centerY - x,
+        centerX - y,
+        centerY - x
+      ).forEach((tile) => {
+        if (this.addToHashSet(discovered, tile)) {
+          result.push(tile)
+        }
+      })
+
+      if (d < 0) {
+        d += 2 * x + 1
+      } else {
+        d += 2 * (x - y) + 1
+        y--
+      }
+
+      x++
+    } while (x <= y)
+
+    return result
+  }
+
+  indexFor(tile: MapTile) {
+    return tile.pos.y * this.width + tile.pos.x
+  }
+
+  private addToHashSet(hashSet: Set<number>, tile: MapTile) {
+    return hashSet.add(this.indexFor(tile))
   }
 }

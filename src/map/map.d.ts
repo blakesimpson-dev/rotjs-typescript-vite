@@ -1,5 +1,10 @@
 import { Tile } from '@/tile'
 
+export type MapTile = {
+  tile: Tile
+  pos: Position
+}
+
 export interface MapProps {
-  tiles: Tile[][]
+  mapTiles: MapTile[][]
 }

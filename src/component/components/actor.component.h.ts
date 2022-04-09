@@ -9,7 +9,7 @@ export class ActorComponent implements Component {
   constructor(public entity: Entity) {}
 
   act(): void {
-    Game.instance.refresh()
+    Game.instance.renderView()
     this.entity.map?.engine.lock()
   }
 }

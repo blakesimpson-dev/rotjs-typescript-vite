@@ -2,7 +2,7 @@ import { ColorCode } from '@/common'
 import { Glyph } from '@/glyph'
 import { Biome, Tile } from '@/tile'
 
-export class WallTile implements Tile {
+export class BoundsTile implements Tile {
   readonly glyph: Glyph
   readonly isCollider: boolean
   readonly isDestructable: boolean
@@ -11,19 +11,19 @@ export class WallTile implements Tile {
     let symbol, fgColor: ColorCode, bgColor: ColorCode
     switch (biome) {
       case 'Cave':
-        symbol = '#'
+        symbol = '▒'
         fgColor = 'goldenrod'
         bgColor = Glyph.defaultBgColor
         break
 
       case 'Forest':
-        symbol = '♣'
+        symbol = '▒'
         fgColor = 'green'
         bgColor = Glyph.defaultBgColor
         break
 
       default:
-        symbol = '#'
+        symbol = '▒'
         fgColor = Glyph.defaultFgColor
         bgColor = Glyph.defaultBgColor
         break
@@ -36,6 +36,6 @@ export class WallTile implements Tile {
     })
 
     this.isCollider = true
-    this.isDestructable = true
+    this.isDestructable = false
   }
 }

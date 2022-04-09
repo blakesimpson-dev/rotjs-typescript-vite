@@ -8,12 +8,28 @@ export class ComponentFactory {
     return new Components.ActorComponent(entity)
   }
 
-  createAttackComponent(entity: Entity): Component {
-    return new Components.AttackComponent(entity)
+  createAttackComponent(
+    entity: Entity,
+    initAttackValue?: number,
+    initHitChance?: number
+  ): Component {
+    return new Components.AttackComponent(
+      entity,
+      initAttackValue,
+      initHitChance
+    )
   }
 
-  createHealthComponent(entity: Entity): Component {
-    return new Components.HealthComponent(entity)
+  createDefenceComponent(entity: Entity, initDefenceValue?: number): Component {
+    return new Components.DefenceComponent(entity, initDefenceValue)
+  }
+
+  createDodgeComponent(entity: Entity, initDodgeChance?: number): Component {
+    return new Components.DodgeComponent(entity, initDodgeChance)
+  }
+
+  createHealthComponent(entity: Entity, initMaxHpValue?: number): Component {
+    return new Components.HealthComponent(entity, initMaxHpValue)
   }
 
   createTransformComponent(entity: Entity): Component {

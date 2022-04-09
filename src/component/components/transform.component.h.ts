@@ -22,14 +22,14 @@ export class TransformComponent implements Component {
         const entityAttack = this.entity.getComponent(
           Components.AttackComponent
         )
-        entityAttack.dealDamage(target)
+        entityAttack.performAttack(target)
       }
       success = false
-    } else if (!tile.isCollider) {
+    } else if (!tile.tile.isCollider) {
       this.position.x = x
       this.position.y = y
       success = true
-    } else if (tile.isDestructable) {
+    } else if (tile.tile.isDestructable) {
       map.destructTile(x, y)
       success = true
     }
