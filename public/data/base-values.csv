@@ -1,0 +1,4 @@
+name,attackValue,hitChance,criticalChance,criticalMultiplier,defenceValue,dodgeChance,maxHpValue
+default,5,60,10,150,0,5,20
+player,5,60,10,150,5,5,40
+kobold,5,60,10,150,2,5,25

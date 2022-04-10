@@ -1,31 +1,41 @@
-import './style.css'
+import '@/style.css'
 
-import { Game } from '@/game'
-import { fetchAsset } from '@/utils'
+import { RenderSystem } from '@/lib/ecs'
+import { Game } from '@/lib/game'
 
-let logoAsset, splashAsset
-await fetchAsset('/assets/ascii/logo72x8.txt').then((text) => {
-  logoAsset = text
-})
+// import { fetchAsset } from '@/utils'
 
-await fetchAsset('/assets/ascii/splash70x36.txt').then((text) => {
-  splashAsset = text
-})
+// export const importedAssets = {
+//   logo: '',
+// }
 
-// console.log(logoAsset)
-// console.log(splashAsset)
-
-export const importedAssets = {
-  logo: logoAsset,
-  splash: splashAsset,
-}
-
-// console.log(importedAssets)
+// await fetchAsset('/assets/ascii/logo72x8.txt').then((text) => {
+//   importedAssets.logo = text
+// })
 
 const game = Game.instance
-const app = document.querySelector<HTMLDivElement>('#app')
-const container = game.display.getContainer()
+const appColOne = document.querySelector<HTMLDivElement>('#app-col-1')
+const appColTwo = document.querySelector<HTMLDivElement>('#app-col-2')
+const renderSystem = RenderSystem.instance
+const viewContainer = renderSystem.viewConsole.container
+const attributesContainer = renderSystem.attributesConsole.container
+const messageContainer = renderSystem.messageConsole.container
+const surroundsContainer = renderSystem.surroundsConsole.container
+const statusContainer = renderSystem.statusConsole.container
 
-if (app && container) {
-  app.appendChild(container)
+if (
+  appColOne &&
+  appColTwo &&
+  viewContainer &&
+  attributesContainer &&
+  messageContainer &&
+  surroundsContainer &&
+  statusContainer
+) {
+  appColOne.appendChild(viewContainer)
+  appColOne.appendChild(attributesContainer)
+  appColOne.appendChild(messageContainer)
+  appColTwo.appendChild(surroundsContainer)
+  appColTwo.appendChild(statusContainer)
+  game.renderSystem.render()
 }
