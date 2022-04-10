@@ -1,10 +1,10 @@
 import { Display as RotDisplay } from 'rot-js'
 
-import { TileMap } from '@/lib/map'
 import { Scene } from '@/lib/scene'
+import { TileMap } from '@/lib/tilemap'
 
 export class LoseScene implements Scene {
-  map: TileMap | null = null
+  tileMap: TileMap | null = null
 
   enter(): void {
     console.log('enter LoseScene')

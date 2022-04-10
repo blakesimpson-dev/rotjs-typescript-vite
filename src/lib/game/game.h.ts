@@ -11,7 +11,7 @@ export class Game {
   constructor() {
     this._currentScene = SceneFactory.instance.sceneCatalog.start
     this.player = EntityFactory.instance.entityCatalog.player
-    this.player.map = this._currentScene.map
+    this.player.tileMap = this._currentScene.tileMap
     this._currentScene.enter()
 
     const bindEventToScene = (eventType: string): void => {

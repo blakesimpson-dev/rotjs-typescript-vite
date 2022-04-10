@@ -1,6 +1,6 @@
 import { Position } from '@/lib/common'
 import { Component, Components, Entity } from '@/lib/ecs'
-import { TileMap } from '@/lib/map'
+import { TileMap } from '@/lib/tilemap'
 
 export class TransformComponent implements Component {
   readonly name = 'Transform'
@@ -11,12 +11,10 @@ export class TransformComponent implements Component {
     this.position = Position.zero()
   }
 
-  tryMove(x: number, y: number, map: TileMap): boolean {
+  tryMove(x: number, y: number, tileMap: TileMap): boolean {
     let success = false
-    const tile = map.getTileAt(x, y)
-    const target = map.getFirstEntityAt(x, y)
-    console.log(x, y)
-    console.log(tile.position)
+    const tile = tileMap.getTileAt(x, y)
+    const target = tileMap.getFirstEntityAt(x, y)
 
     if (target) {
       if (this.entity.hasComponent(Components.AttackComponent)) {
@@ -31,7 +29,7 @@ export class TransformComponent implements Component {
       this.position.y = y
       success = true
     } else if (tile.isDestructable) {
-      map.destructTile(x, y)
+      tileMap.destructTile(x, y)
       success = true
     }
     return success
