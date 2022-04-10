@@ -8,14 +8,14 @@ import {
 import { Components, Entity, EntityFactory } from '@/lib/ecs'
 import { Game } from '@/lib/game'
 import { Glyph } from '@/lib/glyph'
-import { TileMap } from '@/lib/map'
 import { Scene, SceneFactory } from '@/lib/scene'
 import { Tile, Tiles } from '@/lib/tile'
+import { TileMap } from '@/lib/tilemap'
 
 import { Position } from '../../common/position.h'
 
 export class PlayScene implements Scene {
-  map: TileMap | null = null
+  tileMap: TileMap | null = null
 
   enter(): void {
     const tiles: Tile[][] = []
@@ -72,17 +72,17 @@ export class PlayScene implements Scene {
       tiles[x][y].glyph.fgColor = RotColor.toHex(rndFgColor)
     })
 
-    this.map = new TileMap({ tiles: tiles })
+    this.tileMap = new TileMap({ tiles: tiles })
 
-    this.map.addEntityAtRndFloorTilePos(Game.instance.player)
+    this.tileMap.addEntityAtRndFloorTilePos(Game.instance.player)
 
     for (let i = 0; i < 80; i++) {
-      this.map.addEntityAtRndFloorTilePos(
+      this.tileMap.addEntityAtRndFloorTilePos(
         EntityFactory.instance.createKoboldEntity()
       )
     }
 
-    this.map.engine.start()
+    this.tileMap.engine.start()
   }
 
   exit(): void {
@@ -92,11 +92,11 @@ export class PlayScene implements Scene {
   render(display: RotDisplay): void {
     const displayWidth = display._options.width - 2
     const displayHeight = display._options.height - 2
-    const mapWidth = this.map?.width ?? 0
-    const mapHeight = this.map?.height ?? 0
+    const mapWidth = this.tileMap?.width ?? 0
+    const mapHeight = this.tileMap?.height ?? 0
 
     // todo remove later
-    const lineDebug = this.map?.getTilesAlongLine(0, 0, 20, 20)
+    const lineDebug = this.tileMap?.getTilesAlongLine(0, 0, 20, 20)
     lineDebug?.forEach((tile) => {
       tile.glyph = new Glyph({
         symbol: 'X',
@@ -105,7 +105,7 @@ export class PlayScene implements Scene {
     })
 
     // todo remove later
-    const radiusDebug = this.map?.getTilesInRadius(30, 10, 5)
+    const radiusDebug = this.tileMap?.getTilesInRadius(30, 10, 5)
     radiusDebug?.forEach((tile) => {
       tile.glyph = new Glyph({
         symbol: 'X',
@@ -125,7 +125,7 @@ export class PlayScene implements Scene {
 
     for (let x = rootX; x < rootX + displayWidth; x++) {
       for (let y = rootY; y < rootY + displayHeight; y++) {
-        const glyph = this.map?.getTileAt(x, y).glyph
+        const glyph = this.tileMap?.getTileAt(x, y).glyph
         display.draw(
           x - rootX + 1,
           y - rootY + 1,
@@ -136,7 +136,7 @@ export class PlayScene implements Scene {
       }
     }
 
-    this.map?.entities.forEach((entity: Entity) => {
+    this.tileMap?.entities.forEach((entity: Entity) => {
       const entityPosition = entity.getComponent(
         Components.TransformComponent
       ).position
@@ -170,22 +170,22 @@ export class PlayScene implements Scene {
 
         case RotKeys.VK_LEFT:
           this.movePlayer(-1, 0)
-          this.map?.engine.unlock()
+          this.tileMap?.engine.unlock()
           break
 
         case RotKeys.VK_RIGHT:
           this.movePlayer(1, 0)
-          this.map?.engine.unlock()
+          this.tileMap?.engine.unlock()
           break
 
         case RotKeys.VK_UP:
           this.movePlayer(0, -1)
-          this.map?.engine.unlock()
+          this.tileMap?.engine.unlock()
           break
 
         case RotKeys.VK_DOWN:
           this.movePlayer(0, 1)
-          this.map?.engine.unlock()
+          this.tileMap?.engine.unlock()
           break
 
         default:
@@ -201,8 +201,8 @@ export class PlayScene implements Scene {
 
     const newX = playerTransform.position.x + dX
     const newY = playerTransform.position.y + dY
-    if (this.map) {
-      playerTransform.tryMove(newX, newY, this.map)
+    if (this.tileMap) {
+      playerTransform.tryMove(newX, newY, this.tileMap)
     }
   }
 }

@@ -7,8 +7,9 @@ import {
 import { Position } from '@/lib/common'
 import { Components, Entity } from '@/lib/ecs'
 import { Glyph } from '@/lib/glyph'
-import { TileMapProps } from '@/lib/map'
 import { Tile, Tiles, TileType } from '@/lib/tile'
+import { TileMapProps } from '@/lib/tilemap'
+import { shuffleArray } from '@/utils'
 
 export class TileMap {
   readonly tiles: Tile[][]
@@ -36,6 +37,19 @@ export class TileMap {
     } else {
       return this.tiles[x][y]
     }
+  }
+
+  getNeighbouringTiles(x: number, y: number): Tile[] {
+    const results: Tile[] = []
+    for (let dx = -1; dx < 2; dx++) {
+      for (let dy = -1; dy < 2; dy++) {
+        if (dx === 0 && dy === 0) {
+          continue
+        }
+        results.push(this.getTileAt(x + dx, y + dy))
+      }
+    }
+    return shuffleArray(results)
   }
 
   getRndFloorTilePos(): Position {
@@ -204,7 +218,7 @@ export class TileMap {
       }
     }
 
-    entity.map = this
+    entity.tileMap = this
     this.entities.push(entity)
     if (entity.hasComponent(Components.ActorComponent)) {
       this.scheduler.add(entity.getComponent(Components.ActorComponent), true)

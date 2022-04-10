@@ -17,8 +17,8 @@ export class SurroundsConsole implements Console {
   }
 
   render(): void {
-    const map = Game.instance.currentScene.map
-    if (map) {
+    const tileMap = Game.instance.currentScene.tileMap
+    if (tileMap) {
       // todo this radius should be based on the players sight value (need a new sight component ?)
       const sightValue = 5
 
@@ -26,7 +26,7 @@ export class SurroundsConsole implements Console {
         Components.TransformComponent
       )
       // todo later rather than getTileTypesInRadius - it should be based on player's FOV (ie. anything in sight)
-      const tileTypesInRadius = map.getTileTypesInRadius(
+      const tileTypesInRadius = tileMap.getTileTypesInRadius(
         playerTransform.position.x,
         playerTransform.position.y,
         sightValue
@@ -48,13 +48,11 @@ export class SurroundsConsole implements Console {
       }
 
       // todo later rather than getEntitiesInRadius - it should be based on player's FOV (ie. anything in sight)
-      const entitiesInRadius = map.getEntitiesInRadius(
+      const entitiesInRadius = tileMap.getEntitiesInRadius(
         playerTransform.position.x,
         playerTransform.position.y,
         sightValue
       )
-
-      console.log(entitiesInRadius)
 
       entitiesInRadius.sort((a, b) => {
         return a.name < b.name ? -1 : a.name > b.name ? 1 : 0

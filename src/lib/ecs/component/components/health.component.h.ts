@@ -20,7 +20,7 @@ export class HealthComponent implements Component {
       RenderSystem.instance.messageConsole.addMessage(
         `${this.entity.name} has died`
       )
-      this.entity.map?.removeEntity(this.entity)
+      this.entity.tileMap?.removeEntity(this.entity)
     }
   }
 }

@@ -19,6 +19,8 @@ export class BiomeSystem {
     Tiles.setBoundsGlyphForBiome(this._currentBiome)
     Tiles.setFloorGlyphForBiome(this._currentBiome)
     Tiles.setWallGlyphForBiome(this._currentBiome)
+    Tiles.setStairsDownGlyphForBiome(this._currentBiome)
+    Tiles.setStairsUpGlyphForBiome(this._currentBiome)
   }
 
   static get instance(): BiomeSystem {
