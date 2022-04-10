@@ -1,34 +1,41 @@
-import './style.css'
+import '@/style.css'
 
-import { Game } from '@/game'
-import { fetchAsset } from '@/utils'
+import { RenderSystem } from '@/lib/ecs'
+import { Game } from '@/lib/game'
 
-let logoAsset
-await fetchAsset('/assets/ascii/logo72x8.txt').then((text) => {
-  logoAsset = text
-})
+// import { fetchAsset } from '@/utils'
 
-export const importedAssets = {
-  logo: logoAsset,
-}
+// export const importedAssets = {
+//   logo: '',
+// }
+
+// await fetchAsset('/assets/ascii/logo72x8.txt').then((text) => {
+//   importedAssets.logo = text
+// })
 
 const game = Game.instance
 const appColOne = document.querySelector<HTMLDivElement>('#app-col-1')
 const appColTwo = document.querySelector<HTMLDivElement>('#app-col-2')
+const renderSystem = RenderSystem.instance
+const viewContainer = renderSystem.viewConsole.container
+const attributesContainer = renderSystem.attributesConsole.container
+const messageContainer = renderSystem.messageConsole.container
+const surroundsContainer = renderSystem.surroundsConsole.container
+const statusContainer = renderSystem.statusConsole.container
 
-const viewContainer = game.viewDisplay.getContainer()
-const attributeContainer = game.attributeDisplay.getContainer()
-const messageContainer = game.messageDisplay.getContainer()
-const surroundContainer = game.surroundDisplay.getContainer()
-const statusContainer = game.statusDisplay.getContainer()
-
-if (appColOne && viewContainer && attributeContainer && messageContainer) {
+if (
+  appColOne &&
+  appColTwo &&
+  viewContainer &&
+  attributesContainer &&
+  messageContainer &&
+  surroundsContainer &&
+  statusContainer
+) {
   appColOne.appendChild(viewContainer)
-  appColOne.appendChild(attributeContainer)
+  appColOne.appendChild(attributesContainer)
   appColOne.appendChild(messageContainer)
-}
-
-if (appColTwo && surroundContainer && statusContainer) {
-  appColTwo.appendChild(surroundContainer)
+  appColTwo.appendChild(surroundsContainer)
   appColTwo.appendChild(statusContainer)
+  game.renderSystem.render()
 }
