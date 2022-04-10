@@ -17,7 +17,7 @@ export function setGlyphForBiome(biome: Biome): Glyph {
 
   switch (biome) {
     case 'Cave':
-      Wall.glyph = new Glyph({
+      StairsUp.glyph = new Glyph({
         symbol: '<',
         fgColor: Glyph.defaultFgColor,
         bgColor: Glyph.defaultBgColor,
@@ -25,7 +25,7 @@ export function setGlyphForBiome(biome: Biome): Glyph {
       break
 
     case 'Forest':
-      Wall.glyph = new Glyph({
+      StairsUp.glyph = new Glyph({
         symbol: '<',
         fgColor: Glyph.defaultFgColor,
         bgColor: Glyph.defaultBgColor,
@@ -33,7 +33,7 @@ export function setGlyphForBiome(biome: Biome): Glyph {
       break
 
     default:
-      Wall.glyph = new Glyph({
+      StairsUp.glyph = new Glyph({
         symbol: '#<',
         fgColor: Glyph.defaultFgColor,
         bgColor: Glyph.defaultBgColor,
