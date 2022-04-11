@@ -1,13 +1,13 @@
+import { Dungeon } from '@/lib/dungeon'
 import { Component, EntityProps } from '@/lib/ecs'
 import { Glyph } from '@/lib/glyph'
-import { TileMap } from '@/lib/tilemap'
 
 type AbstractComponent<T> = () => unknown & { prototype: T }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- unknown[] never matches ctor
 type Constructor<T> = AbstractComponent<T> | { new (...args: any[]): T }
 
 export abstract class Entity {
-  private _tileMap: TileMap | null = null
+  private _dungeon: Dungeon | null = null
 
   readonly glyph: Glyph
   readonly name: string
@@ -18,12 +18,12 @@ export abstract class Entity {
     this.name = props.name
   }
 
-  get tileMap(): TileMap | null {
-    return this._tileMap
+  get dungeon(): Dungeon | null {
+    return this._dungeon
   }
 
-  set tileMap(tileMap: TileMap | null) {
-    this._tileMap = tileMap
+  set dungeon(dungeon: Dungeon | null) {
+    this._dungeon = dungeon
   }
 
   getComponent<C extends Component>(ctor: Constructor<C>): C {

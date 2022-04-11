@@ -1,15 +1,15 @@
 import { Display as RotDisplay, KEYS as RotKeys } from 'rot-js'
 
+import { Dungeon } from '@/lib/dungeon'
 import { BiomeSystem } from '@/lib/ecs'
 import { Game } from '@/lib/game'
 import { Scene, SceneFactory } from '@/lib/scene'
-import { TileMap } from '@/lib/tilemap'
 
 // import { importedAssets } from '@/main'
 // import { removeRotColorNotation, renderAsciiAsset } from '@/utils'
 
 export class StartScene implements Scene {
-  tileMap: TileMap | null = null
+  dungeon: Dungeon | null = null
 
   enter(): void {
     console.log('enter StartScene')

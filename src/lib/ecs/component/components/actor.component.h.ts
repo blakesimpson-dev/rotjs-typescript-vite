@@ -8,6 +8,6 @@ export class ActorComponent implements Component {
 
   act(): void {
     RenderSystem.instance.render()
-    this.entity.tileMap?.engine.lock()
+    this.entity.dungeon?.engine.lock()
   }
 }

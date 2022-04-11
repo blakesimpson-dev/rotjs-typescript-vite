@@ -1,11 +1,11 @@
-import { Biome, Position } from '@/lib/common'
+import { Biome } from '@/lib/common'
 import { Glyph } from '@/lib/glyph'
 import { Tile } from '@/lib/tile'
 
 export const Floor: Tile = {
   type: 'Floor',
   glyph: new Glyph({}),
-  position: Position.zero(),
+  position: { x: 0, y: 0, z: 0 },
   isCollider: false,
   isDestructable: false,
 }

@@ -1,11 +1,11 @@
-import { Biome, Position } from '@/lib/common'
+import { Biome } from '@/lib/common'
 import { Glyph } from '@/lib/glyph'
 import { Tile } from '@/lib/tile'
 
 export const StairsDown: Tile = {
   type: 'StairsDown',
   glyph: new Glyph({}),
-  position: Position.zero(),
+  position: { x: 0, y: 0, z: 0 },
   isCollider: false,
   isDestructable: false,
 }
@@ -34,7 +34,7 @@ export function setGlyphForBiome(biome: Biome): Glyph {
 
     default:
       StairsDown.glyph = new Glyph({
-        symbol: '#>',
+        symbol: '>',
         fgColor: Glyph.defaultFgColor,
         bgColor: Glyph.defaultBgColor,
       })
