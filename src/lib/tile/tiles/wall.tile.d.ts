@@ -8,6 +8,7 @@ export const Wall: Tile = {
   position: { x: 0, y: 0, z: 0 },
   isCollider: true,
   isDestructable: true,
+  isTransparent: false,
 }
 
 setGlyphForBiome(undefined)

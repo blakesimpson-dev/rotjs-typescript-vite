@@ -1,8 +1,10 @@
 import {
   Color as RotColor,
   Engine as RotEngine,
+  FOV as RotFov,
   Scheduler as RotScheduler,
 } from 'rot-js'
+import DiscreteShadowcasting from 'rot-js/lib/fov/discrete-shadowcasting'
 
 import { Vector3 } from '@/lib/common'
 import { DungeonProps } from '@/lib/dungeon'
@@ -16,6 +18,8 @@ export class Dungeon {
   readonly width: number
   readonly height: number
   readonly depth: number
+  readonly fov: DiscreteShadowcasting[]
+  readonly explored: boolean[][][]
   readonly entities: Entity[] = []
   readonly scheduler = new RotScheduler.Simple()
   readonly engine = new RotEngine(this.scheduler)
@@ -26,6 +30,12 @@ export class Dungeon {
     this.width = props.tiles[0].length
     this.height = props.tiles[0][0].length
 
+    this.fov = []
+    this.setupFov()
+
+    this.explored = new Array<boolean[][]>(this.depth)
+    this.setupExplored()
+
     this.addEntityAtRndFloorTilePos(Game.instance.player, 0)
 
     for (let z = 0; z < this.depth; z++) {
@@ -35,6 +45,49 @@ export class Dungeon {
           z
         )
       }
+    }
+  }
+
+  setupFov(): void {
+    for (let z = 0; z < this.depth; z++) {
+      this.fov.push(
+        new RotFov.DiscreteShadowcasting(
+          (x, y) => {
+            return this.getTileAt(x, y, z).isTransparent
+          },
+          { topology: 4 }
+        )
+      )
+    }
+  }
+
+  getFov(depth: number): DiscreteShadowcasting {
+    return this.fov[depth]
+  }
+
+  setupExplored(): void {
+    for (let z = 0; z < this.depth; z++) {
+      this.explored[z] = new Array<boolean[]>(this.width)
+      for (let x = 0; x < this.width; x++) {
+        this.explored[z][x] = new Array<boolean>(this.height)
+        for (let y = 0; y < this.height; y++) {
+          this.explored[z][x][y] = false
+        }
+      }
+    }
+  }
+
+  setExplored(x: number, y: number, z: number, state: boolean): void {
+    if (this.getTileAt(x, y, z).type !== 'Empty') {
+      this.explored[z][x][y] = state
+    }
+  }
+
+  isExplored(x: number, y: number, z: number): boolean {
+    if (this.getTileAt(x, y, z).type !== 'Empty') {
+      return this.explored[z][x][y]
+    } else {
+      return false
     }
   }
 
@@ -54,9 +107,10 @@ export class Dungeon {
       z < 0 ||
       z >= this.depth
     ) {
-      throw new Error(
-        `getTileAt(x: ${x}, y: ${y}, z: ${z}): Tile requested is out of bounds`
-      )
+      // throw new Error(
+      //   `getTileAt(x: ${x}, y: ${y}, z: ${z}): Tile requested is out of bounds`
+      // )
+      return { ...Tiles.Empty }
     } else {
       return this.tiles[z][x][y] || { ...Tiles.Empty }
     }

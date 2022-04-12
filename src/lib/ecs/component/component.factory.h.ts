@@ -19,6 +19,10 @@ export class ComponentFactory {
     )
   }
 
+  createSightComponent(entity: Entity): Component {
+    return new Components.SightComponent(entity)
+  }
+
   createDefenceComponent(entity: Entity, initDefenceValue?: number): Component {
     return new Components.DefenceComponent(entity, initDefenceValue)
   }

@@ -11,4 +11,5 @@ export const Empty: Tile = {
   position: { x: 0, y: 0, z: 0 },
   isCollider: false,
   isDestructable: false,
+  isTransparent: true,
 }

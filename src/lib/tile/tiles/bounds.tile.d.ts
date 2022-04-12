@@ -8,6 +8,7 @@ export const Bounds: Tile = {
   position: { x: 0, y: 0, z: 0 },
   isCollider: true,
   isDestructable: false,
+  isTransparent: false,
 }
 
 setGlyphForBiome(undefined)

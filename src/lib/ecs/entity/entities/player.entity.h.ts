@@ -10,6 +10,7 @@ export class PlayerEntity extends Entity {
 
     this.addComponent(ComponentFactory.instance.createTransformComponent(this))
     this.addComponent(ComponentFactory.instance.createActorComponent(this))
+    this.addComponent(ComponentFactory.instance.createSightComponent(this))
     this.addComponent(ComponentFactory.instance.createHealthComponent(this, 40))
     this.addComponent(ComponentFactory.instance.createAttackComponent(this))
     this.addComponent(ComponentFactory.instance.createDefenceComponent(this, 5))

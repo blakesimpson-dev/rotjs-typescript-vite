@@ -15,4 +15,5 @@ export interface Tile {
   position: Vector3
   isCollider: boolean
   isDestructable: boolean
+  isTransparent: boolean
 }

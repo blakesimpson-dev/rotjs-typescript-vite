@@ -1,4 +1,8 @@
-import { Display as RotDisplay, KEYS as RotKeys } from 'rot-js'
+import {
+  Color as RotColor,
+  Display as RotDisplay,
+  KEYS as RotKeys,
+} from 'rot-js'
 
 import { Dungeon, DungeonBuilder } from '@/lib/dungeon'
 import { Components, Entity } from '@/lib/ecs'
@@ -37,9 +41,13 @@ export class PlayScene implements Scene {
     const mapWidth = this.dungeon?.width ?? 0
     const mapHeight = this.dungeon?.height ?? 0
 
-    const playerPosition = Game.instance.player.getComponent(
+    const player = Game.instance.player
+
+    const playerPosition = player.getComponent(
       Components.TransformComponent
     ).position
+
+    const playerSight = player.getComponent(Components.SightComponent)
 
     let rootX = Math.max(0, playerPosition.x - displayWidth / 2)
     rootX = Math.min(rootX, mapWidth - displayWidth)
@@ -47,16 +55,52 @@ export class PlayScene implements Scene {
     let rootY = Math.max(0, playerPosition.y - displayHeight / 2)
     rootY = Math.min(rootY, mapHeight - displayHeight)
 
+    const visibleCells: Record<string, boolean> = {}
+    this.dungeon
+      ?.getFov(playerPosition.z)
+      .compute(
+        playerPosition.x,
+        playerPosition.y,
+        playerSight.sightValue,
+        (x, y) => {
+          visibleCells[`${x},${y}`] = true
+          this.dungeon?.setExplored(x, y, playerPosition.z, true)
+        }
+      )
+
     for (let x = rootX; x < rootX + displayWidth; x++) {
       for (let y = rootY; y < rootY + displayHeight; y++) {
-        const glyph = this.dungeon?.getTileAt(x, y, playerPosition.z).glyph
-        display.draw(
-          x - rootX + 1,
-          y - rootY + 1,
-          glyph?.symbol ?? Glyph.errorSymbol,
-          glyph?.fgColor ?? Glyph.errorFgColor,
-          glyph?.bgColor ?? Glyph.errorBgColor
-        )
+        if (this.dungeon?.isExplored(x, y, playerPosition.z)) {
+          const glyph = this.dungeon?.getTileAt(x, y, playerPosition.z).glyph
+          const rgbColor = RotColor.fromString(
+            glyph?.fgColor ?? Glyph.errorFgColor
+          )
+          const darkenedColor = RotColor.toHex(
+            RotColor.multiply(rgbColor, [50, 50, 50])
+          )
+          display.draw(
+            x - rootX + 1,
+            y - rootY + 1,
+            glyph?.symbol ?? Glyph.errorSymbol,
+            darkenedColor,
+            glyph?.bgColor ?? Glyph.errorBgColor
+          )
+        }
+      }
+    }
+
+    for (let x = rootX; x < rootX + displayWidth; x++) {
+      for (let y = rootY; y < rootY + displayHeight; y++) {
+        if (visibleCells[`${x},${y}`]) {
+          const glyph = this.dungeon?.getTileAt(x, y, playerPosition.z).glyph
+          display.draw(
+            x - rootX + 1,
+            y - rootY + 1,
+            glyph?.symbol ?? Glyph.errorSymbol,
+            glyph?.fgColor ?? Glyph.errorFgColor,
+            glyph?.bgColor ?? Glyph.errorBgColor
+          )
+        }
       }
     }
 
@@ -71,13 +115,15 @@ export class PlayScene implements Scene {
         entityPosition.y < rootY + displayHeight &&
         entityPosition.z === playerPosition.z
       ) {
-        display.draw(
-          entityPosition.x - rootX + 1,
-          entityPosition.y - rootY + 1,
-          entity.glyph.symbol,
-          entity.glyph.fgColor,
-          entity.glyph.bgColor
-        )
+        if (visibleCells[`${entityPosition.x},${entityPosition.y}`]) {
+          display.draw(
+            entityPosition.x - rootX + 1,
+            entityPosition.y - rootY + 1,
+            entity.glyph.symbol,
+            entity.glyph.fgColor,
+            entity.glyph.bgColor
+          )
+        }
       }
     })
   }
