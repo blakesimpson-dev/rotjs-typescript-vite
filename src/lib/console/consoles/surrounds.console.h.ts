@@ -19,26 +19,20 @@ export class SurroundsConsole implements Console {
   render(): void {
     const dungeon = Game.instance.currentScene.dungeon
     if (dungeon) {
-      // todo this radius should be based on the players sight value (need a new sight component ?)
-      const sightValue = 5
-
       const playerTransform = Game.instance.player.getComponent(
         Components.TransformComponent
       )
-      // todo later rather than getTileTypesInRadius - it should be based on player's FOV (ie. anything in sight)
-      const tileTypesInRadius = dungeon.getTileTypesInRadius(
-        playerTransform.position.x,
-        playerTransform.position.y,
-        sightValue,
+
+      const tileTypesInFov = dungeon.getTileTypesInFov(
         playerTransform.position.z
       )
 
-      tileTypesInRadius?.sort((a, b) => {
+      tileTypesInFov.sort((a, b) => {
         return a < b ? -1 : a > b ? 1 : 0
       })
 
       const renderTiles: Tile[] = []
-      tileTypesInRadius.forEach((type) => {
+      tileTypesInFov.forEach((type) => {
         renderTiles.push(Tiles[type])
       })
 
@@ -48,20 +42,14 @@ export class SurroundsConsole implements Console {
         this.display.drawText(3, i + 1, renderTiles[i].type)
       }
 
-      // todo later rather than getEntitiesInRadius - it should be based on player's FOV (ie. anything in sight)
-      const entitiesInRadius = dungeon.getEntitiesInRadius(
-        playerTransform.position.x,
-        playerTransform.position.y,
-        sightValue,
-        playerTransform.position.z
-      )
+      const entitiesInFov = dungeon.getEntitiesInFov(playerTransform.position.z)
 
-      entitiesInRadius.sort((a, b) => {
+      entitiesInFov.sort((a, b) => {
         return a.name < b.name ? -1 : a.name > b.name ? 1 : 0
       })
 
-      for (let i = 0; i < entitiesInRadius.length; i++) {
-        const entity = entitiesInRadius[i]
+      for (let i = 0; i < entitiesInFov.length; i++) {
+        const entity = entitiesInFov[i]
         if (entity.name !== 'Player') {
           const glyph = entity.glyph
           this.display.draw(

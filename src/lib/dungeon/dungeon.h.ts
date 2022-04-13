@@ -8,8 +8,7 @@ import DiscreteShadowcasting from 'rot-js/lib/fov/discrete-shadowcasting'
 
 import { Vector3 } from '@/lib/common'
 import { DungeonProps } from '@/lib/dungeon'
-import { Components, Entity, EntityFactory } from '@/lib/ecs'
-import { Game } from '@/lib/game'
+import { Components, Entity } from '@/lib/ecs'
 import { Glyph } from '@/lib/glyph'
 import { Tile, Tiles, TileType } from '@/lib/tile'
 
@@ -20,7 +19,8 @@ export class Dungeon {
   readonly depth: number
   readonly fov: DiscreteShadowcasting[]
   readonly explored: boolean[][][]
-  readonly entities: Entity[] = []
+  readonly visibleTiles: Record<string, boolean> = {}
+  readonly entities: Record<string, Entity> = {}
   readonly scheduler = new RotScheduler.Simple()
   readonly engine = new RotEngine(this.scheduler)
 
@@ -35,17 +35,6 @@ export class Dungeon {
 
     this.explored = new Array<boolean[][]>(this.depth)
     this.setupExplored()
-
-    this.addEntityAtRndFloorTilePos(Game.instance.player, 0)
-
-    for (let z = 0; z < this.depth; z++) {
-      for (let i = 0; i < 20; i++) {
-        this.addEntityAtRndFloorTilePos(
-          EntityFactory.instance.createKoboldEntity(),
-          z
-        )
-      }
-    }
   }
 
   setupFov(): void {
@@ -53,7 +42,7 @@ export class Dungeon {
       this.fov.push(
         new RotFov.DiscreteShadowcasting(
           (x, y) => {
-            return this.getTileAt(x, y, z).isTransparent
+            return this.getTileAt({ x: x, y: y, z: z }).isTransparent
           },
           { topology: 4 }
         )
@@ -77,57 +66,124 @@ export class Dungeon {
     }
   }
 
-  setExplored(x: number, y: number, z: number, state: boolean): void {
-    if (this.getTileAt(x, y, z).type !== 'Empty') {
-      this.explored[z][x][y] = state
+  setExplored(position: Vector3, state: boolean): void {
+    if (
+      this.getTileAt({ x: position.x, y: position.y, z: position.z }).type !==
+      'Empty'
+    ) {
+      this.explored[position.z][position.x][position.y] = state
     }
   }
 
-  isExplored(x: number, y: number, z: number): boolean {
-    if (this.getTileAt(x, y, z).type !== 'Empty') {
-      return this.explored[z][x][y]
+  isExplored(position: Vector3): boolean {
+    if (
+      this.getTileAt({ x: position.x, y: position.y, z: position.z }).type !==
+      'Empty'
+    ) {
+      return this.explored[position.z][position.x][position.y]
     } else {
       return false
     }
   }
 
-  isEmptyFloorTileAt(x: number, y: number, z: number): boolean {
+  updateFov(origin: Vector3, range: number): void {
+    this.clearFov()
+    this.getFov(origin.z).compute(origin.x, origin.y, range, (x, y) => {
+      this.visibleTiles[`${x},${y}`] = true
+      this.setExplored({ x: x, y: y, z: origin.z }, true)
+    })
+  }
+
+  clearFov(): void {
+    for (const tileKey in this.visibleTiles) {
+      delete this.visibleTiles[tileKey]
+    }
+  }
+
+  getTileTypesInFov(depth: number): TileType[] {
+    const tilesInFov: Tile[] = []
+
+    for (const key in this.visibleTiles) {
+      tilesInFov.push(
+        this.getTileAt({
+          x: parseInt(key.split(',')[0]),
+          y: parseInt(key.split(',')[1]),
+          z: depth,
+        })
+      )
+    }
+    return [...new Set(tilesInFov.map((tile) => tile.type))]
+  }
+
+  getEntitiesInFov(depth: number): Entity[] {
+    const results: Entity[] = []
+
+    for (const key in this.visibleTiles) {
+      const entity = this.getEntityAt({
+        x: parseInt(key.split(',')[0]),
+        y: parseInt(key.split(',')[1]),
+        z: depth,
+      })
+      if (entity) {
+        results.push(entity)
+      }
+    }
+
+    return results
+  }
+
+  isEmptyFloorTileAt(position: Vector3): boolean {
     return (
-      this.getTileAt(x, y, z).type === 'Floor' &&
-      !this.getFirstEntityAt(x, y, z)
+      this.getTileAt({ x: position.x, y: position.y, z: position.z }).type ===
+        'Floor' &&
+      !this.getEntityAt({ x: position.x, y: position.y, z: position.z })
     )
   }
 
-  getTileAt(x: number, y: number, z: number): Tile {
+  getTileAt(position: Vector3): Tile {
     if (
-      x < 0 ||
-      x >= this.width ||
-      y < 0 ||
-      y >= this.height ||
-      z < 0 ||
-      z >= this.depth
+      position.x < 0 ||
+      position.x >= this.width ||
+      position.y < 0 ||
+      position.y >= this.height ||
+      position.z < 0 ||
+      position.z >= this.depth
     ) {
       // throw new Error(
       //   `getTileAt(x: ${x}, y: ${y}, z: ${z}): Tile requested is out of bounds`
       // )
       return { ...Tiles.Empty }
     } else {
-      return this.tiles[z][x][y] || { ...Tiles.Empty }
+      return (
+        this.tiles[position.z][position.x][position.y] || { ...Tiles.Empty }
+      )
     }
   }
 
-  getRndFloorTilePos(z: number): Vector3 {
+  getRndFloorTilePos(depth: number): Vector3 {
     let x, y
     do {
       x = Math.floor(Math.random() * this.width)
       y = Math.floor(Math.random() * this.height)
-    } while (!this.isEmptyFloorTileAt(x, y, z))
-    return { x: x, y: y, z: z }
+    } while (
+      !this.isEmptyFloorTileAt({
+        x: x,
+        y: y,
+        z: depth,
+      })
+    )
+    return { x: x, y: y, z: depth }
   }
 
-  destructTile(x: number, y: number, z: number): void {
-    if (this.getTileAt(x, y, z).isDestructable) {
-      this.tiles[z][x][y] = {
+  destructTile(position: Vector3): void {
+    if (
+      this.getTileAt({
+        x: position.x,
+        y: position.y,
+        z: position.z,
+      }).isDestructable
+    ) {
+      this.tiles[position.z][position.x][position.y] = {
         ...Tiles.Floor,
         glyph: new Glyph({
           ...Tiles.Floor.glyph,
@@ -138,7 +194,7 @@ export class Dungeon {
             )
           ),
         }),
-        position: { x: x, y: y, z: z },
+        position: { x: position.x, y: position.y, z: position.z },
       }
     }
   }
@@ -151,7 +207,7 @@ export class Dungeon {
     return y < 0 ? 0 : y > this.height - 1 ? this.height - 1 : y
   }
 
-  // clampZ(z: number): number {
+  // clampZ(depth: number): number {
   //   return z < 0 ? 0 : z > this.depth - 1 ? this.depth - 1 : z
   // }
 
@@ -160,7 +216,7 @@ export class Dungeon {
     originY: number,
     destX: number,
     destY: number,
-    z: number
+    depth: number
   ): Tile[] {
     const results: Tile[] = []
 
@@ -177,7 +233,13 @@ export class Dungeon {
     let err = dx - dy
 
     while (true) {
-      results.push(this.getTileAt(originX, originY, z))
+      results.push(
+        this.getTileAt({
+          x: originX,
+          y: originY,
+          z: depth,
+        })
+      )
       if (originX === destX && originY === destY) {
         break
       }
@@ -198,7 +260,7 @@ export class Dungeon {
     centerX: number,
     centerY: number,
     radius: number,
-    z: number
+    depth: number
   ): Tile[] {
     const results: Tile[] = []
 
@@ -212,7 +274,7 @@ export class Dungeon {
         centerY + y,
         centerX - x,
         centerY + y,
-        z
+        depth
       ).forEach((tile) => {
         results.push(tile)
       })
@@ -222,7 +284,7 @@ export class Dungeon {
         centerY - y,
         centerX + x,
         centerY - y,
-        z
+        depth
       ).forEach((tile) => {
         results.push(tile)
       })
@@ -232,7 +294,7 @@ export class Dungeon {
         centerY + x,
         centerX - y,
         centerY + x,
-        z
+        depth
       ).forEach((tile) => {
         results.push(tile)
       })
@@ -242,7 +304,7 @@ export class Dungeon {
         centerY - x,
         centerX - y,
         centerY - x,
-        z
+        depth
       ).forEach((tile) => {
         results.push(tile)
       })
@@ -266,9 +328,9 @@ export class Dungeon {
     centerX: number,
     centerY: number,
     radius: number,
-    z: number
+    depth: number
   ): TileType[] {
-    const tilesInRadius = this.getTilesInRadius(centerX, centerY, radius, z)
+    const tilesInRadius = this.getTilesInRadius(centerX, centerY, radius, depth)
     return [...new Set(tilesInRadius.map((tile) => tile.type))]
   }
 
@@ -280,41 +342,28 @@ export class Dungeon {
   addEntity(entity: Entity): void {
     if (!entity.hasComponent(Components.TransformComponent)) {
       throw new Error(
-        `addEntity(entity: ${entity}): Entity cannot be added to the map without a TransformComponent`
+        `addEntity(entity: ${entity}): 
+        \nEntity cannot be added to the map without a TransformComponent`
       )
-    } else {
-      const entityPosition = entity.getComponent(
-        Components.TransformComponent
-      ).position
-      if (
-        entityPosition.x < 0 ||
-        entityPosition.x >= this.width ||
-        entityPosition.y < 0 ||
-        entityPosition.y >= this.height ||
-        entityPosition.z < 0 ||
-        entityPosition.z >= this.depth
-      ) {
-        throw new Error(
-          `addEntity(entity: ${entity}): entity.Transformcomponent.position is out of bounds`
-        )
-      }
     }
 
     entity.dungeon = this
-    this.entities.push(entity)
+    this.updateEntityPosition(entity)
+
     if (entity.hasComponent(Components.ActorComponent)) {
       this.scheduler.add(entity.getComponent(Components.ActorComponent), true)
     }
   }
 
-  addEntityAtRndFloorTilePos(entity: Entity, z: number): void {
+  addEntityAtRndFloorTilePos(entity: Entity, depth: number): void {
     if (!entity.hasComponent(Components.TransformComponent)) {
       throw new Error(
-        `addEntity(entity: Entity): Entity cannot be added to the map without a TransformComponent`
+        `addEntity(entity: ${entity}): 
+        \nEntity cannot be added to the map without a TransformComponent`
       )
     }
 
-    const randomFloorTilePosition = this.getRndFloorTilePos(z)
+    const randomFloorTilePosition = this.getRndFloorTilePos(depth)
     const entityPosition = entity.getComponent(
       Components.TransformComponent
     ).position
@@ -325,56 +374,76 @@ export class Dungeon {
   }
 
   removeEntity(entity: Entity): void {
-    const entityIndex = this.entities.indexOf(entity)
-    if (entityIndex === -1) {
-      throw new Error(
-        `removeEntity(entity: Entity): Entity cannot be removed as it does not exist in entities: Entity[]`
-      )
-    }
-    this.entities.splice(entityIndex, 1)
+    const entityPosition = entity.getComponent(
+      Components.TransformComponent
+    ).position
+    const entityKey = `${entityPosition.x},${entityPosition.y},${entityPosition.z}`
+    delete this.entities[entityKey]
+
     if (entity.hasComponent(Components.ActorComponent)) {
       this.scheduler.remove(entity)
     }
   }
 
-  getFirstEntityAt(x: number, y: number, z: number): Entity | null {
-    return this.entities.filter((entity: Entity) => {
-      const entityPosition = entity.getComponent(
-        Components.TransformComponent
-      ).position
-      return (
-        entityPosition?.x === x &&
-        entityPosition?.y === y &&
-        entityPosition?.z === z
+  updateEntityPosition(
+    entity: Entity,
+    oldX?: number,
+    oldY?: number,
+    oldZ?: number
+  ): void {
+    if (oldX) {
+      const oldEntityKey = `${oldX},${oldY},${oldZ}`
+      if (this.entities[oldEntityKey] === entity) {
+        delete this.entities[oldEntityKey]
+      }
+    }
+    const entityPosition = entity.getComponent(
+      Components.TransformComponent
+    ).position
+    if (
+      entityPosition.x < 0 ||
+      entityPosition.x >= this.width ||
+      entityPosition.y < 0 ||
+      entityPosition.y >= this.height ||
+      entityPosition.z < 0 ||
+      entityPosition.z >= this.depth
+    ) {
+      throw new Error(
+        `updateEntityPosition(entity: ${entity},  oldX: ${oldX}, oldY: ${oldY}, oldZ: ${oldZ}): 
+        \nEntity position cannot be updated as new position is out of bounds`
       )
-    })[0]
+    }
+    const entityKey = `${entityPosition.x},${entityPosition.y},${entityPosition.z}`
+    if (this.entities[entityKey]) {
+      throw new Error(
+        `updateEntityPosition(entity: ${entity},  oldX: ${oldX}, oldY: ${oldY}, oldZ: ${oldZ}): 
+        \nEntity position cannot be updated as new position is occupied by ${this.entities[entityKey]}`
+      )
+    }
+    this.entities[entityKey] = entity
   }
 
-  getEntitiesAt(x: number, y: number, z: number): Entity[] {
-    return this.entities.filter((entity: Entity) => {
-      const entityPosition = entity.hasComponent(Components.TransformComponent)
-        ? entity.getComponent(Components.TransformComponent).position
-        : null
-      return entityPosition
-        ? entityPosition.x === x &&
-            entityPosition.y === y &&
-            entityPosition.z === z
-        : null
-    })
+  getEntityAt(position: Vector3): Entity | null {
+    return this.entities[`${position.x},${position.y},${position.z}`]
   }
 
   getEntitiesInRadius(
     centerX: number,
     centerY: number,
     radius: number,
-    z: number
+    depth: number
   ): Entity[] {
     const results: Entity[] = []
-    const tilesInRadius = this.getTilesInRadius(centerX, centerY, radius, z)
+    const tilesInRadius = this.getTilesInRadius(centerX, centerY, radius, depth)
     tilesInRadius.forEach((tile) => {
-      results.push(
-        ...this.getEntitiesAt(tile.position.x, tile.position.y, tile.position.z)
-      )
+      const entity = this.getEntityAt({
+        x: tile.position.x,
+        y: tile.position.y,
+        z: tile.position.z,
+      })
+      if (entity) {
+        results.push(entity)
+      }
     })
 
     return results

@@ -43,7 +43,7 @@ export class DungeonBuilder {
     this.connectAllRegions()
   }
 
-  private buildZLevel(z: number): Tile[][] {
+  private buildZLevel(depth: number): Tile[][] {
     const tiles: Tile[][] = new Array<Tile[]>(this._width)
     for (let w = 0; w < this._width; w++) {
       tiles[w] = new Array<Tile>(this._height)
@@ -61,26 +61,26 @@ export class DungeonBuilder {
         tiles[x][y] = {
           ...Tiles.Floor,
           glyph: new Glyph({ ...Tiles.Floor.glyph }),
-          position: { x: x, y: y, z: z },
+          position: { x: x, y: y, z: depth },
         }
       } else {
         tiles[x][y] = {
           ...Tiles.Wall,
           glyph: new Glyph({ ...Tiles.Wall.glyph }),
-          position: { x: x, y: y, z: z },
+          position: { x: x, y: y, z: depth },
         }
       }
       if (y === 0 || y === this._height - 1) {
         tiles[x][y] = {
           ...Tiles.Bounds,
           glyph: new Glyph({ ...Tiles.Bounds.glyph }),
-          position: { x: x, y: y, z: z },
+          position: { x: x, y: y, z: depth },
         }
       } else if (x === 0 || x === this._width - 1) {
         tiles[x][y] = {
           ...Tiles.Bounds,
           glyph: new Glyph({ ...Tiles.Bounds.glyph }),
-          position: { x: x, y: y, z: z },
+          position: { x: x, y: y, z: depth },
         }
       }
 
@@ -94,44 +94,50 @@ export class DungeonBuilder {
     return tiles
   }
 
-  private canFillRegion(x: number, y: number, z: number): boolean {
+  private canFillRegion(position: Vector3): boolean {
     if (
-      x < 0 ||
-      y < 0 ||
-      z < 0 ||
-      x >= this._width ||
-      y >= this._height ||
-      z >= this._depth
+      position.x < 0 ||
+      position.y < 0 ||
+      position.z < 0 ||
+      position.x >= this._width ||
+      position.y >= this._height ||
+      position.z >= this._depth
     ) {
       return false
     }
 
-    if (this._regions[z][x][y] !== 0) {
+    if (this._regions[position.z][position.x][position.y] !== 0) {
       return false
     }
 
-    return !this._tiles[z][x][y].isCollider
+    return !this._tiles[position.z][position.x][position.y].isCollider
   }
 
-  private fillRegion(region: number, x: number, y: number, z: number): number {
+  private fillRegion(region: number, origin: Vector3): number {
     let tilesFilled = 1
     let tilePosition: Vector2 | undefined
     let neighbours: Vector2[]
-    const tilePositions: Vector2[] = [{ x: x, y: y }]
-    this._regions[z][x][y] = region
+    const tilePositions: Vector2[] = [{ x: origin.x, y: origin.y }]
+    this._regions[origin.z][origin.x][origin.y] = region
 
     while (tilePositions.length > 0) {
       tilePosition = tilePositions.pop()
       if (tilePosition) {
-        neighbours = this.getNeighbouringPositions(
-          tilePosition.x,
-          tilePosition.y
-        )
+        neighbours = this.getNeighbouringPositions({
+          x: tilePosition.x,
+          y: tilePosition.y,
+        })
         while (neighbours.length > 0) {
           tilePosition = neighbours.pop()
           if (tilePosition) {
-            if (this.canFillRegion(tilePosition.x, tilePosition.y, z)) {
-              this._regions[z][tilePosition.x][tilePosition.y] = region
+            if (
+              this.canFillRegion({
+                x: tilePosition.x,
+                y: tilePosition.y,
+                z: origin.z,
+              })
+            ) {
+              this._regions[origin.z][tilePosition.x][tilePosition.y] = region
               tilePositions.push(tilePosition)
               tilesFilled++
             }
@@ -142,12 +148,12 @@ export class DungeonBuilder {
     return tilesFilled
   }
 
-  private removeRegion(region: number, z: number) {
+  private removeRegion(region: number, depth: number) {
     for (let x = 0; x < this._width; x++) {
       for (let y = 0; y < this._height; y++) {
-        if (this._regions[z][x][y] === region) {
-          this._regions[z][x][y] = 0
-          this._tiles[z][x][y] = {
+        if (this._regions[depth][x][y] === region) {
+          this._regions[depth][x][y] = 0
+          this._tiles[depth][x][y] = {
             ...Tiles.Wall,
             glyph: new Glyph({
               ...Tiles.Wall.glyph,
@@ -158,20 +164,20 @@ export class DungeonBuilder {
                 )
               ),
             }),
-            position: { x: 0, y: 0, z: z },
+            position: { x: 0, y: 0, z: depth },
           }
         }
       }
     }
   }
 
-  private setupRegionsForZLevel(z: number): void {
+  private setupRegionsForZLevel(depth: number): void {
     let region = 1
     for (let x = 0; x < this._width; x++) {
       for (let y = 0; y < this._height; y++) {
-        if (this.canFillRegion(x, y, z)) {
-          if (this.fillRegion(region, x, y, z) <= 20) {
-            this.removeRegion(region, z)
+        if (this.canFillRegion({ x: x, y: y, z: depth })) {
+          if (this.fillRegion(region, { x: x, y: y, z: depth }) <= 20) {
+            this.removeRegion(region, depth)
           } else {
             region++
           }
@@ -181,21 +187,21 @@ export class DungeonBuilder {
   }
 
   private getRegionOverlapPositions(
-    z: number,
-    r1: number,
-    r2: number
+    depth: number,
+    regionOne: number,
+    regionTwo: number
   ): Vector3[] {
     const results = []
 
     for (let x = 0; x < this._width; x++) {
       for (let y = 0; y < this._height; y++) {
         if (
-          this._tiles[z][x][y].type === 'Floor' &&
-          this._tiles[z + 1][x][y].type === 'Floor' &&
-          this._regions[z][x][y] === r1 &&
-          this._regions[z + 1][x][y] === r2
+          this._tiles[depth][x][y].type === 'Floor' &&
+          this._tiles[depth + 1][x][y].type === 'Floor' &&
+          this._regions[depth][x][y] === regionOne &&
+          this._regions[depth + 1][x][y] === regionTwo
         ) {
-          results.push({ x: x, y: y, z: z })
+          results.push({ x: x, y: y, z: depth })
         }
       }
     }
@@ -203,14 +209,22 @@ export class DungeonBuilder {
     return shuffleArray(results)
   }
 
-  private connectRegions(z: number, r1: number, r2: number): boolean {
-    const overlapPositions = this.getRegionOverlapPositions(z, r1, r2)
+  private connectRegions(
+    depth: number,
+    regionOne: number,
+    regionTwo: number
+  ): boolean {
+    const overlapPositions = this.getRegionOverlapPositions(
+      depth,
+      regionOne,
+      regionTwo
+    )
     if (!overlapPositions.length) {
       return false
     }
 
     const overlapPositon = overlapPositions[0]
-    this._tiles[z][overlapPositon.x][overlapPositon.y] = {
+    this._tiles[depth][overlapPositon.x][overlapPositon.y] = {
       ...Tiles.StairsDown,
       glyph: new Glyph({ ...Tiles.StairsDown.glyph }),
       position: {
@@ -220,7 +234,7 @@ export class DungeonBuilder {
       },
     }
 
-    this._tiles[z + 1][overlapPositon.x][overlapPositon.y] = {
+    this._tiles[depth + 1][overlapPositon.x][overlapPositon.y] = {
       ...Tiles.StairsUp,
       glyph: new Glyph({ ...Tiles.StairsUp.glyph }),
       position: {
@@ -259,14 +273,14 @@ export class DungeonBuilder {
     }
   }
 
-  getNeighbouringPositions(x: number, y: number): Vector2[] {
+  getNeighbouringPositions(origin: Vector2): Vector2[] {
     const results: Vector2[] = []
     for (let dx = -1; dx < 2; dx++) {
       for (let dy = -1; dy < 2; dy++) {
         if (dx === 0 && dy === 0) {
           continue
         }
-        results.push({ x: x + dx, y: y + dy })
+        results.push({ x: origin.x + dx, y: origin.y + dy })
       }
     }
     return shuffleArray(results)

@@ -4,8 +4,9 @@ import {
   KEYS as RotKeys,
 } from 'rot-js'
 
+import { Vector3 } from '@/lib/common'
 import { Dungeon, DungeonBuilder } from '@/lib/dungeon'
-import { Components, Entity } from '@/lib/ecs'
+import { Components, EntityFactory } from '@/lib/ecs'
 import { Game } from '@/lib/game'
 import { Glyph } from '@/lib/glyph'
 import { Scene, SceneFactory } from '@/lib/scene'
@@ -27,6 +28,17 @@ export class PlayScene implements Scene {
     this.dungeon = new Dungeon({
       tiles: tiles,
     })
+
+    this.dungeon.addEntityAtRndFloorTilePos(Game.instance.player, 0)
+
+    for (let z = 0; z < this.dungeon.depth; z++) {
+      for (let i = 0; i < 20; i++) {
+        this.dungeon.addEntityAtRndFloorTilePos(
+          EntityFactory.instance.createKoboldEntity(),
+          z
+        )
+      }
+    }
 
     this.dungeon.engine.start()
   }
@@ -55,23 +67,23 @@ export class PlayScene implements Scene {
     let rootY = Math.max(0, playerPosition.y - displayHeight / 2)
     rootY = Math.min(rootY, mapHeight - displayHeight)
 
-    const visibleCells: Record<string, boolean> = {}
-    this.dungeon
-      ?.getFov(playerPosition.z)
-      .compute(
-        playerPosition.x,
-        playerPosition.y,
-        playerSight.sightValue,
-        (x, y) => {
-          visibleCells[`${x},${y}`] = true
-          this.dungeon?.setExplored(x, y, playerPosition.z, true)
-        }
-      )
+    this.dungeon?.updateFov(
+      {
+        x: playerPosition.x,
+        y: playerPosition.y,
+        z: playerPosition.z,
+      },
+      playerSight.sightValue
+    )
 
     for (let x = rootX; x < rootX + displayWidth; x++) {
       for (let y = rootY; y < rootY + displayHeight; y++) {
-        if (this.dungeon?.isExplored(x, y, playerPosition.z)) {
-          const glyph = this.dungeon?.getTileAt(x, y, playerPosition.z).glyph
+        if (this.dungeon?.isExplored({ x: x, y: y, z: playerPosition.z })) {
+          const glyph = this.dungeon?.getTileAt({
+            x: x,
+            y: y,
+            z: playerPosition.z,
+          }).glyph
           const rgbColor = RotColor.fromString(
             glyph?.fgColor ?? Glyph.errorFgColor
           )
@@ -91,8 +103,12 @@ export class PlayScene implements Scene {
 
     for (let x = rootX; x < rootX + displayWidth; x++) {
       for (let y = rootY; y < rootY + displayHeight; y++) {
-        if (visibleCells[`${x},${y}`]) {
-          const glyph = this.dungeon?.getTileAt(x, y, playerPosition.z).glyph
+        if (this.dungeon?.visibleTiles[`${x},${y}`]) {
+          const glyph = this.dungeon?.getTileAt({
+            x: x,
+            y: y,
+            z: playerPosition.z,
+          }).glyph
           display.draw(
             x - rootX + 1,
             y - rootY + 1,
@@ -104,7 +120,9 @@ export class PlayScene implements Scene {
       }
     }
 
-    this.dungeon?.entities.forEach((entity: Entity) => {
+    const entities = this.dungeon?.entities
+    for (const key in entities) {
+      const entity = entities[key]
       const entityPosition = entity.getComponent(
         Components.TransformComponent
       ).position
@@ -115,7 +133,9 @@ export class PlayScene implements Scene {
         entityPosition.y < rootY + displayHeight &&
         entityPosition.z === playerPosition.z
       ) {
-        if (visibleCells[`${entityPosition.x},${entityPosition.y}`]) {
+        if (
+          this.dungeon?.visibleTiles[`${entityPosition.x},${entityPosition.y}`]
+        ) {
           display.draw(
             entityPosition.x - rootX + 1,
             entityPosition.y - rootY + 1,
@@ -125,7 +145,7 @@ export class PlayScene implements Scene {
           )
         }
       }
-    })
+    }
   }
 
   processInputEvent(eventType: string, event: KeyboardEvent): void {
@@ -140,22 +160,22 @@ export class PlayScene implements Scene {
           break
 
         case RotKeys.VK_LEFT:
-          this.movePlayer(-1, 0, 0)
+          this.movePlayer({ x: -1, y: 0, z: 0 })
           this.dungeon?.engine.unlock()
           break
 
         case RotKeys.VK_RIGHT:
-          this.movePlayer(1, 0, 0)
+          this.movePlayer({ x: 1, y: 0, z: 0 })
           this.dungeon?.engine.unlock()
           break
 
         case RotKeys.VK_UP:
-          this.movePlayer(0, -1, 0)
+          this.movePlayer({ x: 0, y: -1, z: 0 })
           this.dungeon?.engine.unlock()
           break
 
         case RotKeys.VK_DOWN:
-          this.movePlayer(0, 1, 0)
+          this.movePlayer({ x: 0, y: 1, z: 0 })
           this.dungeon?.engine.unlock()
           break
 
@@ -166,12 +186,12 @@ export class PlayScene implements Scene {
       const keyChar = String.fromCharCode(event.charCode)
       switch (keyChar) {
         case '>':
-          this.movePlayer(0, 0, 1)
+          this.movePlayer({ x: 0, y: 0, z: 1 })
           this.dungeon?.engine.unlock()
           break
 
         case '<':
-          this.movePlayer(0, 0, -1)
+          this.movePlayer({ x: 0, y: 0, z: -1 })
           this.dungeon?.engine.unlock()
           break
 
@@ -181,17 +201,17 @@ export class PlayScene implements Scene {
     }
   }
 
-  private movePlayer(dX: number, dY: number, dZ: number): void {
+  private movePlayer(destination: Vector3): void {
     const playerTransform = Game.instance.player.getComponent(
       Components.TransformComponent
     )
 
-    const newX = playerTransform.position.x + dX
-    const newY = playerTransform.position.y + dY
-    const newZ = playerTransform.position.z + dZ
-
     if (this.dungeon) {
-      playerTransform.tryMove(newX, newY, newZ)
+      playerTransform.tryMove({
+        x: playerTransform.position.x + destination.x,
+        y: playerTransform.position.y + destination.y,
+        z: playerTransform.position.z + destination.z,
+      })
     }
   }
 }
