@@ -1,4 +1,4 @@
-import { BiomeSystem, Entity, EntityFactory, RenderSystem } from '@/lib/ecs'
+import { BiomeSystem, Entity, EntityFactory, RenderSystem } from '@/lib/aeics'
 import { Scene, SceneFactory } from '@/lib/scene'
 
 export class Game {
@@ -10,8 +10,10 @@ export class Game {
 
   constructor() {
     this._currentScene = SceneFactory.instance.sceneCatalog.start
+
     this.player = EntityFactory.instance.entityCatalog.player
-    this.player.tileMap = this._currentScene.tileMap
+    this.player.dungeon = this._currentScene.dungeon
+
     this._currentScene.enter()
 
     const bindEventToScene = (eventType: string): void => {
@@ -23,7 +25,7 @@ export class Game {
 
     bindEventToScene('keydown')
     // bindEventToScene('keyup')
-    // bindEventToScene('keypress')
+    bindEventToScene('keypress')
   }
 
   get currentScene(): Scene {

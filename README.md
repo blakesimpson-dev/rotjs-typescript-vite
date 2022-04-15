@@ -9,7 +9,8 @@ vars:
 
 rotjs-typescript-vite todo:
 
-  - 
+  - copy tilemap and make it 'dungeon'
+  - when doing 3d changes -> apply to dungeon
 
 fixes:
   - common domain - pretty messy

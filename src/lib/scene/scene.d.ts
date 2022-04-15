@@ -1,9 +1,11 @@
 import { Display as RotDisplay } from 'rot-js'
 
-import { TileMap } from '@/lib/tilemap'
+import { Dungeon } from '@/lib/dungeon'
 
 export interface Scene {
-  tileMap: TileMap | null
+  dungeon: Dungeon | null
+  flags: Record<string, boolean>
+  setFlag: (key: string, value: boolean) => void
   enter: () => void
   exit: () => void
   render: (display: RotDisplay) => void

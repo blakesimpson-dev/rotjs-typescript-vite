@@ -1,15 +1,27 @@
 import { Display as RotDisplay, KEYS as RotKeys } from 'rot-js'
 
-import { BiomeSystem } from '@/lib/ecs'
+import { BiomeSystem } from '@/lib/aeics'
+import { Dungeon } from '@/lib/dungeon'
 import { Game } from '@/lib/game'
 import { Scene, SceneFactory } from '@/lib/scene'
-import { TileMap } from '@/lib/tilemap'
 
 // import { importedAssets } from '@/main'
 // import { removeRotColorNotation, renderAsciiAsset } from '@/utils'
 
 export class StartScene implements Scene {
-  tileMap: TileMap | null = null
+  dungeon: Dungeon | null = null
+  flags: Record<string, boolean> = {}
+
+  setFlag(key: string, value: boolean): void {
+    const existingKeys = Object.keys(this.flags)
+    if (existingKeys.indexOf(key) === -1) {
+      throw new Error(
+        `setFlag(key: ${key}, value: ${value}): Cannot set flag that does not exist`
+      )
+    } else {
+      this.flags[key] = value
+    }
+  }
 
   enter(): void {
     console.log('enter StartScene')
