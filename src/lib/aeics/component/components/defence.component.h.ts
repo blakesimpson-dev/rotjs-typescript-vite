@@ -1,4 +1,4 @@
-import { Component, Entity } from '@/lib/ecs'
+import { Component, Entity } from '@/lib/aeics'
 
 export class DefenceComponent implements Component {
   readonly name = 'Defence'

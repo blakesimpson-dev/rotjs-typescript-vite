@@ -1,7 +1,7 @@
 import { Display as RotDisplay, KEYS as RotKeys } from 'rot-js'
 
+import { BiomeSystem } from '@/lib/aeics'
 import { Dungeon } from '@/lib/dungeon'
-import { BiomeSystem } from '@/lib/ecs'
 import { Game } from '@/lib/game'
 import { Scene, SceneFactory } from '@/lib/scene'
 
@@ -10,6 +10,18 @@ import { Scene, SceneFactory } from '@/lib/scene'
 
 export class StartScene implements Scene {
   dungeon: Dungeon | null = null
+  flags: Record<string, boolean> = {}
+
+  setFlag(key: string, value: boolean): void {
+    const existingKeys = Object.keys(this.flags)
+    if (existingKeys.indexOf(key) === -1) {
+      throw new Error(
+        `setFlag(key: ${key}, value: ${value}): Cannot set flag that does not exist`
+      )
+    } else {
+      this.flags[key] = value
+    }
+  }
 
   enter(): void {
     console.log('enter StartScene')

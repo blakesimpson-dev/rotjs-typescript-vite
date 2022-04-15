@@ -5,6 +5,18 @@ import { Scene } from '@/lib/scene'
 
 export class LoseScene implements Scene {
   dungeon: Dungeon | null = null
+  flags: Record<string, boolean> = {}
+
+  setFlag(key: string, value: boolean): void {
+    const existingKeys = Object.keys(this.flags)
+    if (existingKeys.indexOf(key) === -1) {
+      throw new Error(
+        `setFlag(key: ${key}, value: ${value}): Cannot set flag that does not exist`
+      )
+    } else {
+      this.flags[key] = value
+    }
+  }
 
   enter(): void {
     console.log('enter LoseScene')

@@ -1,5 +1,5 @@
+import { Component, Components, Entity, RenderSystem } from '@/lib/aeics'
 import { Vector3 } from '@/lib/common'
-import { Component, Components, Entity, RenderSystem } from '@/lib/ecs'
 
 export class TransformComponent implements Component {
   readonly name = 'Transform'
@@ -62,17 +62,22 @@ export class TransformComponent implements Component {
         success = true
       }
     } else if (target) {
-      if (this.entity.hasComponent(Components.AttackComponent)) {
-        const entityAttack = this.entity.getComponent(
-          Components.AttackComponent
-        )
-        entityAttack.performAttack(target)
+      if (
+        (this.entity.name === 'Player' && target.name !== 'Player') ||
+        (this.entity.name !== 'Player' && target.name === 'Player')
+      ) {
+        if (this.entity.hasComponent(Components.AttackComponent)) {
+          const entityAttack = this.entity.getComponent(
+            Components.AttackComponent
+          )
+          entityAttack.performAttack(target)
+        }
       }
       success = false
     } else if (!tile.isCollider) {
       this.setPosition({ x: destination.x, y: destination.y, z: destination.z })
       success = true
-    } else if (tile.isDestructable) {
+    } else if (tile.isDestructable && this.entity.name === 'Player') {
       dungeon.destructTile({
         x: destination.x,
         y: destination.y,

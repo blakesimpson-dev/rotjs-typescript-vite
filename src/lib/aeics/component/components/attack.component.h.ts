@@ -1,4 +1,4 @@
-import { Component, Components, Entity, RenderSystem } from '@/lib/ecs'
+import { Component, Components, Entity, RenderSystem } from '@/lib/aeics'
 import { calcPercentChanceSuccess } from '@/utils'
 
 export class AttackComponent implements Component {

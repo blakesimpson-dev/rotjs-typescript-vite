@@ -35,7 +35,6 @@ export class DungeonBuilder {
       }
     }
 
-    // todo this is currently broken - it fills everything with walls :)
     for (let z = 0; z < this._depth; z++) {
       this.setupRegionsForZLevel(z)
     }

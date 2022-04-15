@@ -1,5 +1,5 @@
+import { Component, EntityProps } from '@/lib/aeics'
 import { Dungeon } from '@/lib/dungeon'
-import { Component, EntityProps } from '@/lib/ecs'
 import { Glyph } from '@/lib/glyph'
 
 type AbstractComponent<T> = () => unknown & { prototype: T }
@@ -9,11 +9,13 @@ type Constructor<T> = AbstractComponent<T> | { new (...args: any[]): T }
 export abstract class Entity {
   private _dungeon: Dungeon | null = null
 
+  readonly id: string
   readonly glyph: Glyph
   readonly name: string
   readonly components: Component[] = []
 
   constructor(protected readonly props: EntityProps) {
+    this.id = props.id
     this.glyph = props.glyph
     this.name = props.name
   }
@@ -24,6 +26,18 @@ export abstract class Entity {
 
   set dungeon(dungeon: Dungeon | null) {
     this._dungeon = dungeon
+  }
+
+  describe(): string {
+    return this.name
+  }
+
+  describeA(capitalize: boolean): string {
+    const description = this.describe()
+    const prefixes = capitalize ? ['A', 'An'] : ['a', 'an']
+    const prefixIndex =
+      'aeiou'.indexOf(description.charAt(0).toLowerCase()) >= 0 ? 1 : 0
+    return `${prefixes[prefixIndex]} ${description}`
   }
 
   getComponent<C extends Component>(ctor: Constructor<C>): C {

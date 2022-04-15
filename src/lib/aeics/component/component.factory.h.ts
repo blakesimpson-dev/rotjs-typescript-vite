@@ -1,10 +1,10 @@
-import { Component, Components, Entity } from '@/lib/ecs'
+import { Action, Component, Components, Entity } from '@/lib/aeics'
 
 export class ComponentFactory {
   private static _instance: ComponentFactory
 
-  createActorComponent(entity: Entity): Component {
-    return new Components.ActorComponent(entity)
+  createActorComponent(entity: Entity, actions: Action[]): Component {
+    return new Components.ActorComponent(entity, actions)
   }
 
   createAttackComponent(
@@ -19,10 +19,6 @@ export class ComponentFactory {
     )
   }
 
-  createSightComponent(entity: Entity): Component {
-    return new Components.SightComponent(entity)
-  }
-
   createDefenceComponent(entity: Entity, initDefenceValue?: number): Component {
     return new Components.DefenceComponent(entity, initDefenceValue)
   }
@@ -33,6 +29,18 @@ export class ComponentFactory {
 
   createHealthComponent(entity: Entity, initMaxHpValue?: number): Component {
     return new Components.HealthComponent(entity, initMaxHpValue)
+  }
+
+  createInventoryComponent(entity: Entity, initSlotCount?: number): Component {
+    return new Components.InventoryComponent(entity, initSlotCount)
+  }
+
+  createPositionComponent(entity: Entity): Component {
+    return new Components.PositionComponent(entity)
+  }
+
+  createSightComponent(entity: Entity): Component {
+    return new Components.SightComponent(entity)
   }
 
   createTransformComponent(entity: Entity): Component {

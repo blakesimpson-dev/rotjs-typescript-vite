@@ -1,8 +1,8 @@
 import { Display as RotDisplay } from 'rot-js'
 
 import { AttributesConsoleDispOpt } from '@/display.config'
+import { Components } from '@/lib/aeics'
 import { Console } from '@/lib/console'
-import { Components } from '@/lib/ecs'
 import { Game } from '@/lib/game'
 import { drawRect } from '@/utils'
 

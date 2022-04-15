@@ -1,4 +1,4 @@
-import { Entities, Entity, EntityCatalog } from '@/lib/ecs'
+import { Entities, Entity, EntityCatalog } from '@/lib/aeics'
 
 export class EntityFactory {
   private static _instance: EntityFactory

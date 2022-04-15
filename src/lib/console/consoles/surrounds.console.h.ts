@@ -1,8 +1,8 @@
 import { Display as RotDisplay } from 'rot-js'
 
 import { SurroundsConsoleDispOpt } from '@/display.config'
+import { Components } from '@/lib/aeics'
 import { Console } from '@/lib/console'
-import { Components } from '@/lib/ecs'
 import { Game } from '@/lib/game'
 import { Tile, Tiles } from '@/lib/tile'
 import { drawRect } from '@/utils'
@@ -19,13 +19,11 @@ export class SurroundsConsole implements Console {
   render(): void {
     const dungeon = Game.instance.currentScene.dungeon
     if (dungeon) {
-      const playerTransform = Game.instance.player.getComponent(
+      const playerPosition = Game.instance.player.getComponent(
         Components.TransformComponent
-      )
+      ).position
 
-      const tileTypesInFov = dungeon.getTileTypesInFov(
-        playerTransform.position.z
-      )
+      const tileTypesInFov = dungeon.getTileTypesInFov(playerPosition.z)
 
       tileTypesInFov.sort((a, b) => {
         return a < b ? -1 : a > b ? 1 : 0
@@ -36,17 +34,48 @@ export class SurroundsConsole implements Console {
         renderTiles.push(Tiles[type])
       })
 
+      let drawOffsetY = 1
+
       for (let i = 0; i < renderTiles.length; i++) {
         const glyph = renderTiles[i].glyph
-        this.display.draw(1, i + 1, glyph.symbol, glyph.fgColor, glyph.bgColor)
-        this.display.drawText(3, i + 1, renderTiles[i].type)
+        this.display.draw(
+          1,
+          i + drawOffsetY,
+          glyph.symbol,
+          glyph.fgColor,
+          glyph.bgColor
+        )
+        this.display.drawText(3, i + drawOffsetY, renderTiles[i].type)
       }
 
-      const entitiesInFov = dungeon.getEntitiesInFov(playerTransform.position.z)
+      const itemsInFov = dungeon.getItemsInFov(playerPosition.z)
+
+      itemsInFov.sort((a, b) => {
+        return a.name < b.name ? -1 : a.name > b.name ? 1 : 0
+      })
+
+      drawOffsetY = renderTiles.length + 1
+
+      for (let i = 0; i < itemsInFov.length; i++) {
+        const item = itemsInFov[i]
+        const glyph = item.glyph
+        this.display.draw(
+          1,
+          i + drawOffsetY,
+          glyph.symbol,
+          glyph.fgColor,
+          glyph.bgColor
+        )
+        this.display.drawText(3, i + drawOffsetY, item.name)
+      }
+
+      const entitiesInFov = dungeon.getEntitiesInFov(playerPosition.z)
 
       entitiesInFov.sort((a, b) => {
         return a.name < b.name ? -1 : a.name > b.name ? 1 : 0
       })
+
+      drawOffsetY = renderTiles.length + itemsInFov.length + 1
 
       for (let i = 0; i < entitiesInFov.length; i++) {
         const entity = entitiesInFov[i]
@@ -54,23 +83,24 @@ export class SurroundsConsole implements Console {
           const glyph = entity.glyph
           this.display.draw(
             1,
-            i + renderTiles.length + 2,
+            i + drawOffsetY,
             glyph.symbol,
             glyph.fgColor,
             glyph.bgColor
           )
-          this.display.drawText(3, i + renderTiles.length + 2, entity.name)
+          this.display.drawText(3, i + drawOffsetY, entity.name)
           const entityHealth = entity.getComponent(Components.HealthComponent)
           if (entityHealth) {
             this.display.drawText(
               4 + entity.name.length,
-              i + renderTiles.length + 2,
+              i + drawOffsetY,
               `HP: ${entityHealth.hpValue}/${entityHealth.maxHpValue}`
             )
           }
         }
       }
     }
+
     drawRect(
       this.display,
       {

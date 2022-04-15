@@ -4,6 +4,8 @@ import { Dungeon } from '@/lib/dungeon'
 
 export interface Scene {
   dungeon: Dungeon | null
+  flags: Record<string, boolean>
+  setFlag: (key: string, value: boolean) => void
   enter: () => void
   exit: () => void
   render: (display: RotDisplay) => void

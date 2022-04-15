@@ -15,6 +15,12 @@ export const ViewConsoleDispOpt: Partial<DisplayOptions> = {
   height: 20,
 }
 
+export const MenuConsoleDispOpt: Partial<DisplayOptions> = {
+  ...BaseDispOpt,
+  width: 96,
+  height: 40,
+}
+
 export const AttributesConsoleDispOpt: Partial<DisplayOptions> = {
   ...BaseDispOpt,
   width: 96,

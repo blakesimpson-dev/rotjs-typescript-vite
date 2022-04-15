@@ -1,4 +1,4 @@
-import { Component, Entity } from '@/lib/ecs'
+import { Component, Entity } from '@/lib/aeics'
 import { calcPercentChanceSuccess } from '@/utils'
 
 export class DodgeComponent implements Component {

@@ -6,9 +6,9 @@ import {
 } from 'rot-js'
 import DiscreteShadowcasting from 'rot-js/lib/fov/discrete-shadowcasting'
 
+import { Components, Entity, Item } from '@/lib/aeics'
 import { Vector3 } from '@/lib/common'
 import { DungeonProps } from '@/lib/dungeon'
-import { Components, Entity } from '@/lib/ecs'
 import { Glyph } from '@/lib/glyph'
 import { Tile, Tiles, TileType } from '@/lib/tile'
 
@@ -21,6 +21,7 @@ export class Dungeon {
   readonly explored: boolean[][][]
   readonly visibleTiles: Record<string, boolean> = {}
   readonly entities: Record<string, Entity> = {}
+  readonly items: Record<string, Item[]> = {}
   readonly scheduler = new RotScheduler.Simple()
   readonly engine = new RotEngine(this.scheduler)
 
@@ -126,6 +127,23 @@ export class Dungeon {
       })
       if (entity) {
         results.push(entity)
+      }
+    }
+
+    return results
+  }
+
+  getItemsInFov(depth: number): Item[] {
+    const results: Item[] = []
+
+    for (const key in this.visibleTiles) {
+      const items = this.getItemsAt({
+        x: parseInt(key.split(',')[0]),
+        y: parseInt(key.split(',')[1]),
+        z: depth,
+      })
+      if (items) {
+        results.push(...items)
       }
     }
 
@@ -334,11 +352,6 @@ export class Dungeon {
     return [...new Set(tilesInRadius.map((tile) => tile.type))]
   }
 
-  // todo determing if indexFor is needed - if so it needs to be changed for z
-  // indexFor(tile: Tile) {
-  //   return tile.position.y * this.width + tile.position.x
-  // }
-
   addEntity(entity: Entity): void {
     if (!entity.hasComponent(Components.TransformComponent)) {
       throw new Error(
@@ -364,12 +377,14 @@ export class Dungeon {
     }
 
     const randomFloorTilePosition = this.getRndFloorTilePos(depth)
-    const entityPosition = entity.getComponent(
-      Components.TransformComponent
-    ).position
-    entityPosition.x = randomFloorTilePosition.x
-    entityPosition.y = randomFloorTilePosition.y
-    entityPosition.z = randomFloorTilePosition.z
+
+    const entityTransform = entity.getComponent(Components.TransformComponent)
+    entityTransform.setPosition({
+      x: randomFloorTilePosition.x,
+      y: randomFloorTilePosition.y,
+      z: randomFloorTilePosition.z,
+    })
+
     this.addEntity(entity)
   }
 
@@ -447,5 +462,34 @@ export class Dungeon {
     })
 
     return results
+  }
+
+  addItem(position: Vector3, item: Item): void {
+    const itemKey = `${position.x},${position.y},${position.z}`
+    if (this.items[itemKey]) {
+      this.items[itemKey].push(item)
+    } else {
+      this.items[itemKey] = [item]
+    }
+  }
+
+  addItemAtRndFloorTilePos(item: Item, depth: number): void {
+    const rndPos = this.getRndFloorTilePos(depth)
+    this.addItem({ x: rndPos.x, y: rndPos.y, z: rndPos.z }, item)
+  }
+
+  getItemsAt(position: Vector3): Item[] {
+    return this.items[`${position.x},${position.y},${position.z}`]
+  }
+
+  setItemsAt(position: Vector3, items: Item[]): void {
+    const itemKey = `${position.x},${position.y},${position.z}`
+    if (!items.length) {
+      if (this.items[itemKey]) {
+        delete this.items[itemKey]
+      }
+    } else {
+      this.items[itemKey] = items
+    }
   }
 }
