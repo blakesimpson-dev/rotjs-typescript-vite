@@ -75,6 +75,27 @@ export class TransformComponent implements Component {
       }
       success = false
     } else if (!tile.isCollider) {
+      if (this.entity.name === 'Player') {
+        const items = this.entity.dungeon?.getItemsAt({
+          x: destination.x,
+          y: destination.y,
+          z: destination.z,
+        })
+        if (items) {
+          if (items.length === 1) {
+            const itemColor = items[0].glyph.fgColor
+            RenderSystem.instance.messageConsole.addMessage(
+              `You see %c{${itemColor}}${items[0].describeA(
+                false
+              )}%c{white} on the ground`
+            )
+          } else {
+            RenderSystem.instance.messageConsole.addMessage(
+              `You see many items on the ground`
+            )
+          }
+        }
+      }
       this.setPosition({ x: destination.x, y: destination.y, z: destination.z })
       success = true
     } else if (tile.isDestructable && this.entity.name === 'Player') {

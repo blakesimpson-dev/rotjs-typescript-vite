@@ -26,4 +26,8 @@ export class StatusConsole implements Console {
       '#716391'
     )
   }
+
+  processInputEvent(eventType: string, event: KeyboardEvent) {
+    console.log(`${eventType} detected: ${event.keyCode}`)
+  }
 }

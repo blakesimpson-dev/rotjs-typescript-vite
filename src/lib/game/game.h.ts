@@ -1,11 +1,18 @@
-import { BiomeSystem, Entity, EntityFactory, RenderSystem } from '@/lib/aeics'
+import {
+  BiomeSystem,
+  Entity,
+  EntityFactory,
+  InputSystem,
+  RenderSystem,
+} from '@/lib/aeics'
 import { Scene, SceneFactory } from '@/lib/scene'
 
 export class Game {
   private static _instance: Game
   private _currentScene: Scene
-  readonly BiomeSystem = BiomeSystem.instance
+  readonly biomeSystem = BiomeSystem.instance
   readonly renderSystem = RenderSystem.instance
+  readonly inputSystem = InputSystem.instance
   readonly player: Entity
 
   constructor() {
@@ -15,17 +22,6 @@ export class Game {
     this.player.dungeon = this._currentScene.dungeon
 
     this._currentScene.enter()
-
-    const bindEventToScene = (eventType: string): void => {
-      window.addEventListener(eventType, (event: Event) => {
-        this._currentScene.processInputEvent(eventType, event as KeyboardEvent)
-        this.renderSystem.render()
-      })
-    }
-
-    bindEventToScene('keydown')
-    // bindEventToScene('keyup')
-    bindEventToScene('keypress')
   }
 
   get currentScene(): Scene {

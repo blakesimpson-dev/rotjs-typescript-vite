@@ -37,6 +37,10 @@ export class MessageConsole implements Console {
     )
   }
 
+  processInputEvent(eventType: string, event: KeyboardEvent) {
+    console.log(`${eventType} detected: ${event.keyCode}`)
+  }
+
   addMessage(message: string): void {
     this._lines.enqueue(message)
     if (this._lines.count > this._maxLines) {

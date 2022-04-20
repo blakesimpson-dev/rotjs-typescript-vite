@@ -9,8 +9,10 @@ vars:
 
 rotjs-typescript-vite todo:
 
-  - copy tilemap and make it 'dungeon'
-  - when doing 3d changes -> apply to dungeon
+  - we cant have menuconsole handling all different inputs / rendering for different menus
+  - create new menu class that menuconsole uses, change menuMode to target menu
+  - menus are initialized by the render system and have their own input processing
+  - this way if a menu is dealing with items, it can store its own item information etc. list of items and selected indices
 
 fixes:
   - common domain - pretty messy

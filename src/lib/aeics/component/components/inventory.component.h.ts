@@ -21,6 +21,16 @@ export class InventoryComponent implements Component {
     return this.slots[index].item
   }
 
+  getItems(): Item[] {
+    const results: Item[] = []
+    this.slots.forEach((slot) => {
+      if (slot.item) {
+        results.push(slot.item)
+      }
+    })
+    return results
+  }
+
   addItem(item: Item): boolean {
     let success = false
     for (let i = 0; i < this.slots.length; i++) {

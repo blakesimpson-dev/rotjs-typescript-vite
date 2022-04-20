@@ -7,6 +7,7 @@ import {
 import {
   Components,
   EntityFactory,
+  InputSystem,
   ItemFactory,
   RenderSystem,
 } from '@/lib/aeics'
@@ -49,6 +50,12 @@ export class PlayScene implements Scene {
     })
 
     this.dungeon.addEntityAtRndFloorTilePos(Game.instance.player, 0)
+    // todo remove this later
+    // for (let i = 0; i < 4; i++) {
+    //   Game.instance.player
+    //     .getComponent(Components.InventoryComponent)
+    //     .addItem(ItemFactory.instance.createAppleItem())
+    // }
 
     for (let z = 0; z < this.dungeon.depth; z++) {
       for (let i = 0; i < 20; i++) {
@@ -146,80 +153,6 @@ export class PlayScene implements Scene {
         }
       }
     }
-
-    // todo remove later - once the new rendering code has been tested
-    // for (let x = rootX; x < rootX + displayWidth; x++) {
-    //   for (let y = rootY; y < rootY + displayHeight; y++) {
-    //     if (this.dungeon?.isExplored({ x: x, y: y, z: playerPosition.z })) {
-    //       const glyph = this.dungeon?.getTileAt({
-    //         x: x,
-    //         y: y,
-    //         z: playerPosition.z,
-    //       }).glyph
-    //       const rgbColor = RotColor.fromString(
-    //         glyph?.fgColor ?? Glyph.errorFgColor
-    //       )
-    //       const darkenedColor = RotColor.toHex(
-    //         RotColor.multiply(rgbColor, [50, 50, 50])
-    //       )
-    //       display.draw(
-    //         x - rootX + 1,
-    //         y - rootY + 1,
-    //         glyph?.symbol ?? Glyph.errorSymbol,
-    //         darkenedColor,
-    //         glyph?.bgColor ?? Glyph.errorBgColor
-    //       )
-    //     }
-    //   }
-    // }
-
-    // todo remove later - once the new rendering code has been tested
-    // for (let x = rootX; x < rootX + displayWidth; x++) {
-    //   for (let y = rootY; y < rootY + displayHeight; y++) {
-    //     if (this.dungeon?.visibleTiles[`${x},${y}`]) {
-    //       const glyph = this.dungeon?.getTileAt({
-    //         x: x,
-    //         y: y,
-    //         z: playerPosition.z,
-    //       }).glyph
-    //       display.draw(
-    //         x - rootX + 1,
-    //         y - rootY + 1,
-    //         glyph?.symbol ?? Glyph.errorSymbol,
-    //         glyph?.fgColor ?? Glyph.errorFgColor,
-    //         glyph?.bgColor ?? Glyph.errorBgColor
-    //       )
-    //     }
-    //   }
-    // }
-
-    // todo remove later - once the new rendering code has been tested
-    // const entities = this.dungeon?.entities
-    // for (const key in entities) {
-    //   const entity = entities[key]
-    //   const entityPosition = entity.getComponent(
-    //     Components.TransformComponent
-    //   ).position
-    //   if (
-    //     entityPosition.x >= rootX &&
-    //     entityPosition.y >= rootY &&
-    //     entityPosition.x < rootX + displayWidth &&
-    //     entityPosition.y < rootY + displayHeight &&
-    //     entityPosition.z === playerPosition.z
-    //   ) {
-    //     if (
-    //       this.dungeon?.visibleTiles[`${entityPosition.x},${entityPosition.y}`]
-    //     ) {
-    //       display.draw(
-    //         entityPosition.x - rootX + 1,
-    //         entityPosition.y - rootY + 1,
-    //         entity.glyph.symbol,
-    //         entity.glyph.fgColor,
-    //         entity.glyph.bgColor
-    //       )
-    //     }
-    //   }
-    // }
   }
 
   processInputEvent(eventType: string, event: KeyboardEvent): void {
@@ -230,27 +163,67 @@ export class PlayScene implements Scene {
     } else {
       if (eventType === 'keydown') {
         switch (event.keyCode) {
+          case RotKeys.VK_ESCAPE:
+            RenderSystem.instance.menuConsole.mode = 'Main'
+            InputSystem.instance.targetConsole =
+              RenderSystem.instance.menuConsole
+            break
+
+          case RotKeys.VK_I:
+            if (
+              !Game.instance.player
+                .getComponent(Components.InventoryComponent)
+                .getItems().length
+            ) {
+              RenderSystem.instance.messageConsole.addMessage(
+                `You are not carrying anything`
+              )
+            } else {
+              RenderSystem.instance.menuConsole.mode = 'Inventory'
+              InputSystem.instance.targetConsole =
+                RenderSystem.instance.menuConsole
+            }
+
+            break
+
+          case RotKeys.VK_D:
+            if (
+              !Game.instance.player
+                .getComponent(Components.InventoryComponent)
+                .getItems().length
+            ) {
+              RenderSystem.instance.messageConsole.addMessage(
+                `You have nothing to drop`
+              )
+            } else {
+              RenderSystem.instance.menuConsole.mode = 'DropItems'
+              InputSystem.instance.targetConsole =
+                RenderSystem.instance.menuConsole
+            }
+            break
+
+          case RotKeys.VK_COMMA:
+            if (
+              !this.dungeon?.getItemsAt(
+                Game.instance.player.getComponent(Components.TransformComponent)
+                  .position
+              )
+            ) {
+              RenderSystem.instance.messageConsole.addMessage(
+                `There is nothing on the ground to pick up`
+              )
+            } else {
+              RenderSystem.instance.menuConsole.mode = 'GetItems'
+              InputSystem.instance.targetConsole =
+                RenderSystem.instance.menuConsole
+            }
+            break
+
           // todo remove this later
           case RotKeys.VK_NUMPAD0:
             Game.instance.player
               .getComponent(Components.HealthComponent)
               .recieveAttack(5)
-            break
-
-          case RotKeys.VK_I:
-            if (RenderSystem.instance.menuMode) {
-              RenderSystem.instance.menuMode = null
-            } else {
-              RenderSystem.instance.menuMode = 'Inventory'
-            }
-            break
-
-          case RotKeys.VK_RETURN:
-            // Game.instance.currentScene = SceneFactory.instance.sceneCatalog.win
-            break
-
-          case RotKeys.VK_ESCAPE:
-            // Game.instance.currentScene = SceneFactory.instance.sceneCatalog.lose
             break
 
           case RotKeys.VK_LEFT:

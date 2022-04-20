@@ -29,4 +29,11 @@ export class ViewConsole implements Console {
       '#716391'
     )
   }
+
+  processInputEvent(eventType: string, event: KeyboardEvent) {
+    Game.instance.currentScene.processInputEvent(
+      eventType,
+      event as KeyboardEvent
+    )
+  }
 }

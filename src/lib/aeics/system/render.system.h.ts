@@ -1,12 +1,7 @@
 import { Consoles } from '@/lib/console'
 
-type MenuMode = 'Inventory' | null
-
 export class RenderSystem {
   private static _instance: RenderSystem
-
-  private _menuMode: MenuMode = null
-  private _isRenderingMenuConsole = false
 
   readonly viewConsole: Consoles.ViewConsole
   readonly menuConsole: Consoles.MenuConsole
@@ -14,20 +9,6 @@ export class RenderSystem {
   readonly messageConsole: Consoles.MessageConsole
   readonly surroundsConsole: Consoles.SurroundsConsole
   readonly statusConsole: Consoles.StatusConsole
-
-  get menuMode(): MenuMode {
-    return this._menuMode
-  }
-
-  set menuMode(mode: MenuMode) {
-    if (mode) {
-      this._menuMode = mode
-      this._isRenderingMenuConsole = true
-    } else {
-      this._menuMode = null
-      this._isRenderingMenuConsole = false
-    }
-  }
 
   constructor() {
     this.viewConsole = new Consoles.ViewConsole()
@@ -40,7 +21,7 @@ export class RenderSystem {
 
   clearConsoles() {
     this.viewConsole.display.clear()
-    this.viewConsole.display.clear()
+    this.menuConsole.display.clear()
     this.attributesConsole.display.clear()
     this.messageConsole.display.clear()
     this.surroundsConsole.display.clear()
@@ -52,10 +33,10 @@ export class RenderSystem {
     const menuContainer = this.menuConsole.container
     const viewContainer = this.viewConsole.container
     if (menuContainer && viewContainer) {
-      if (this._isRenderingMenuConsole) {
+      if (this.menuConsole.mode) {
         menuContainer.hidden = false
         viewContainer.hidden = true
-        this.menuConsole.render({ mode: this.menuMode })
+        this.menuConsole.render()
       } else {
         menuContainer.hidden = true
         viewContainer.hidden = false

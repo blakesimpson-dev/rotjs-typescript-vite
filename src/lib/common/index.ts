@@ -1,3 +1,4 @@
+export * from './alphabet.d'
 export * from './biome.d'
 export * from './queue.h'
 export * from './rect.d'
